@@ -31,6 +31,12 @@ http://nginx.org/download/nginx-1.18.0.zip をダウンロードして解凍
 nginx.exeを起動して、http://localhost/ にアクセスして起動画面が出ればOK
 
 
+# 動作確認方法
+
+`C:\soft\nginx-1.18.0\html\` のパスに適当なフォルダを作って、html, js, wasmファイルを置く
+
+ファイルパスが `C:\soft\nginx-1.18.0\html\hoge\foo.html` の場合は `http://localhost/hoge/foo.html` でアクセスできる
+
 
 # Samples
 
@@ -41,12 +47,6 @@ nginx.exeを起動して、http://localhost/ にアクセスして起動画面�
 - 
 
 
-
-# 動作確認方法
-
-`C:\soft\nginx-1.18.0\html\` のパスに適当なフォルダを作って、html, js, wasmファイルを置く
-
-ファイルパスが `C:\soft\nginx-1.18.0\html\hoge\foo.html` の場合は `http://localhost/hoge/foo.html` でアクセスできる
 
 
 
