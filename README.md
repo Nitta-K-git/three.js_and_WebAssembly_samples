@@ -34,9 +34,11 @@ nginx.exeを起動して、http://localhost/ にアクセスして起動画面�
 
 # Samples
 
-- cmakeのテンプレート : [CODE]()
-- C++のVectorデータをjs側に渡す : [CODE]()
-- jsのデータをC++側に渡す : [CODE]()
+- cmakeのテンプレート : [CODE](./samples/cmake_template)
+- IDEで自動補完を使えるようにする : [CODE](./samples/cmake_with_Qt)
+- C++のVectorデータをjs側に渡す : [CODE](./samples/vector_to_js)
+- jsのデータをC++側に渡す : [CODE](./samples/vector_from_js)
+- 
 
 
 
