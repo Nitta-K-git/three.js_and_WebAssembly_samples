@@ -1,4 +1,4 @@
-# WebAssemblyのサンプルコード
+# Sample codes of WebAssembly and three.js
 
 動作環境はwindows10, 64bit
 
@@ -38,13 +38,22 @@ nginx.exeを起動して、http://localhost/ にアクセスして起動画面�
 ファイルパスが `C:\soft\nginx-1.18.0\html\hoge\foo.html` の場合は `http://localhost/hoge/foo.html` でアクセスできる
 
 
-# Samples
+# WebAssembly sample codes
 
-- cmakeのテンプレート : [CODE](./samples/cmake_template)
+- template with cmake : [CODE](./samples/cmake_template)
 - IDEで自動補完を使えるようにする : [CODE](./samples/cmake_with_Qt)
 - C++のVectorデータをjs側に渡す : [CODE](./samples/vector_to_js)
 - jsのデータをC++側に渡す : [CODE](./samples/vector_from_js)
-- three.jsのテンプレート : [CODE](./samples/threejs_template)
+
+
+
+# three.js sample codes
+
+- template : [CODE](./samples/threejs/template.html)
+- define mesh on the fly : [CODE](./samples/threejs/geometry.html)
+- picking object(raycast) : [CODE](./samples/threejs/raycast.html)
+- picking face : [CODE]()
+- picking vertex : [CODE]()
 - 
 
 

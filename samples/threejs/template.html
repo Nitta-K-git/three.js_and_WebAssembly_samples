@@ -5,6 +5,7 @@
     <meta charset="utf-8" />
     <!-- JSライブラリ読み込み，CDNを使用 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"></script>
+    <script src="../js/controls/OrbitControls.js"></script>
     <script>
         // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
         window.addEventListener('load', init);
@@ -26,11 +27,43 @@
             const scene = new THREE.Scene();
 
             // カメラを作成
-            const camera = new THREE.PerspectiveCamera(45, width / height); // 画角，アスペクト比
-            camera.position.set(0, 0, +1000);
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            // カメラの初期座標を設定
+            camera.position.set(0, 0, +10);
+
+            // カメラコントローラーを作成
+            const controls = new THREE.OrbitControls(camera);
 
             // 箱を作成
-            const geometry = new THREE.BoxGeometry(400, 400, 800); // 形状を表す
+            var verticesOfCube = [
+                -1, -1, -1,
+                1, -1, -1,
+                1, 1, -1,
+                -1, 1, -1,
+                -1, -1, 1,
+                1, -1, 1,
+                1, 1, 1,
+                -1, 1, 1,
+            ];
+
+            var indicesOfFaces = [
+                2, 1, 0,
+                0, 3, 2,
+                0, 4, 7,
+                7, 3, 0,
+                0, 1, 5,
+                5, 4, 0,
+                1, 2, 6,
+                6, 5, 1,
+                2, 3, 7,
+                7, 6, 2,
+                4, 5, 6,
+                6, 7, 4
+            ];
+
+            var geometry = new THREE.PolyhedronGeometry(verticesOfCube, indicesOfFaces, 6, 2);
+
+            // const geometry = new THREE.BoxGeometry(400, 400, 800); // 形状を表す
             const material = new THREE.MeshNormalMaterial(); // 材質を表す, 適当なカラーを割り振るマテリアル
             const box = new THREE.Mesh(geometry, material); // Mesh型が表示オブジェクト，形状＋材質
             scene.add(box); // 空間に追加
@@ -42,8 +75,6 @@
             function tick() {
                 requestAnimationFrame(tick); // セットした関数を毎フレーム呼び出す，関数内に書かないとループしない
                 // アニメーション処理を書く
-                box.rotation.y += 0.01;
-                
                 renderer.render(scene, camera); // レンダリング，画面更新は明示的に書く
             }
         }
