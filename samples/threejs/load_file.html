@@ -12,6 +12,30 @@
         window.addEventListener('load', init);
 
         function init() {
+            const showOpenFileDialog = () => {
+                return new Promise(resolve => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.txt, text/plain';
+                    input.onchange = event => { resolve(event.target.files[0]); };
+                    input.click();
+                });
+            };
+
+            const readAsText = file => {
+                return new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.readAsText(file);
+                    reader.onload = () => { resolve(reader.result); };
+                });
+            };
+
+            (async () => {
+                const file = await showOpenFileDialog();
+                const content = await readAsText(file);
+                // 内容表示
+                alert(content);
+            })();
 
             // サイズを指定
             const width = 960;

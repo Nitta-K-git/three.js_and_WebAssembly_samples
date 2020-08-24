@@ -1,0 +1,170 @@
+<!-- 
+    https://threejs.org/docs/#api/en/core/BufferGeometry
+    BufferGeometryを使って正方形を作成
+    面は頂点座標を直接指定する方式(インデックスでないので、重複点でも毎回指定する)
+ -->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <!-- JSライブラリ読み込み，CDNを使用 -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
+    <script src="../js/controls/OrbitControls.js"></script>
+    <script>
+        // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
+        window.addEventListener('load', init);
+
+        function init() {
+
+            // サイズを指定
+            const width = 960;
+            const height = 540;
+
+            // マウス座標管理用のベクトルを作成
+            const mouse = new THREE.Vector2();
+            // canvas 要素の参照を取得する
+            const canvas = document.querySelector('#myCanvas');
+
+            // レンダラーを作成
+            const renderer = new THREE.WebGLRenderer({
+                canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+
+            // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
+            const scene = new THREE.Scene();
+
+            //light
+            var light = new THREE.HemisphereLight();
+            scene.add(light);
+
+            // カメラを作成
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            // カメラの初期座標を設定
+            camera.position.set(0, 0, +10);
+
+            // カメラコントローラーを作成
+            const controls = new THREE.OrbitControls(camera);
+
+            var geometry = new THREE.BufferGeometry();
+            // create a simple square shape. We duplicate the top left and bottom right
+            // vertices because each vertex needs to appear once per triangle.
+            var vertices = new Float32Array([
+                -1.0, -1.0, 1.0,
+                1.0, -1.0, 1.0,
+                1.0, 1.0, 1.0,
+                -1.0, 1.0, 1.0,
+            ]);
+
+            var indices = [];
+            indices.push(
+                0, 1, 2,
+                1, 2, 3,
+            );
+
+            var colors = [];
+            colors.push(
+                0, 0, 1,
+                0, 0, 1,
+                0, 0, 1,
+                0, 0, 1,
+            );
+
+            posBufAttr = new THREE.BufferAttribute(vertices, 3);
+            colorBufAttr = new THREE.Float32BufferAttribute(colors, 3);
+            // itemSize = 3 because there are 3 values (components) per vertex
+            // 値を更新する必要があるときはBufferAttributeオブジェクトのneedsUpdateフラグを立てる(https://threejs.org/docs/#api/en/core/BufferAttribute)
+            geometry.setAttribute('position', posBufAttr);
+            geometry.setAttribute('color', colorBufAttr);
+            geometry.setIndex(indices);
+
+            // ライトの影響を受けないシンプルなマテリアル(デフォルトは塗りつぶした感じ)
+            // https://threejs.org/docs/#api/en/materials/MeshBasicMaterial
+            var material = new THREE.MeshBasicMaterial({
+                color: 0xff0000,
+                side: THREE.DoubleSide,
+                // vertexColors: true, // 頂点に対して色を設定する
+            });
+            var mesh = new THREE.Mesh(geometry, material);
+
+            scene.add(mesh);
+
+            // レイキャストを作成
+            const raycaster = new THREE.Raycaster();
+
+            canvas.addEventListener('mousemove', handleMouseMove);
+
+            // マウスを動かしたときのイベント
+            function handleMouseMove(event) {
+                const element = event.currentTarget;
+                // canvas要素上のXY座標
+                const x = event.clientX - element.offsetLeft;
+                const y = event.clientY - element.offsetTop;
+                // canvas要素の幅・高さ
+                const w = element.offsetWidth;
+                const h = element.offsetHeight;
+
+                // -1〜+1の範囲で現在のマウス座標を登録する
+                mouse.x = (x / w) * 2 - 1;
+                mouse.y = -(y / h) * 2 + 1;
+            }
+
+            // 初回実行 → 一度実行されると後はループ設定が有効になる
+            tick();
+
+            // 毎フレーム時に実行されるループイベントです
+            function tick() {
+                // レイキャスト = マウス位置からまっすぐに伸びる光線ベクトルを生成
+                raycaster.setFromCamera(mouse, camera);
+
+                // その光線とぶつかったオブジェクトを得る
+                const intersects = raycaster.intersectObject(mesh);
+
+                if (intersects.length > 0) {
+                    var intersect = intersects[0];
+                    var face = intersect.face;
+                    var fi = intersect.faceIndex;
+                    console.log(fi);
+
+                    face.color.setHex(0xff00ff);
+                    // colors[fi] = 1;
+                    // posBufAttr[0] = -3;
+
+                    // NG
+                    // colorBufAttr.needsUpdate = true;
+                    // posBufAttr.needsUpdate = true;
+                    // console.log(posBufAttr.version);
+
+                    // NG
+                    // posBufAttr.position.setX( 0, -3);
+                    // posBufAttr.position.needsUpdate = true;
+
+                    // NG
+                    // geometry.setAttribute('position', posBufAttr);
+                    // posBufAttr.needsUpdate = true;
+
+                    // OK
+                    // geometry.attributes.position.setX( 0, -3);
+                    // geometry.attributes.position.needsUpdate = true;
+                    // geometry.attributes.color.setXYZ( 0, 1, 1, 1);
+                    geometry.attributes.color.needsUpdate = true;
+                }
+
+                requestAnimationFrame(tick); // セットした関数を毎フレーム呼び出す，関数内に書かないとループしない
+                // アニメーション処理を書く
+                renderer.render(scene, camera); // レンダリング，画面更新は明示的に書く
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <!-- 描画エリアを用意 -->
+    <canvas id="myCanvas"></canvas>
+</body>
+
+</html>

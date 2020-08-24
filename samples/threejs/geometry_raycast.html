@@ -17,6 +17,11 @@
             const width = 960;
             const height = 540;
 
+            // マウス座標管理用のベクトルを作成
+            const mouse = new THREE.Vector2(-2,-2);
+            // canvas 要素の参照を取得する
+            const canvas = document.querySelector('#myCanvas');
+
             // レンダラーを作成
             const renderer = new THREE.WebGLRenderer({
                 canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
@@ -41,7 +46,9 @@
 
             // geometry
             var material = new THREE.MeshStandardMaterial({
-                color: 0x00cc00
+                // color: 0x00cc00, 
+                // vertexColors: THREE.FaceColors, // https://stackoverflow.com/questions/11252592/how-to-change-face-color-in-three-js
+                vertexColors: true,
             });
 
             //create a triangular geometry
@@ -51,11 +58,11 @@
             geometry.vertices.push(new THREE.Vector3(50, 50, 0));
             geometry.vertices.push(new THREE.Vector3(-50, 50, 0));
 
-            //create a new face using vertices 0, 1, 2
-            var normal = new THREE.Vector3(0, 0, 1); //optional
-            var color = new THREE.Color(0xffaa00); //optional
-            var materialIndex = 0; //optional
-            var face = new THREE.Face3(0, 1, 2, normal, color, materialIndex);
+            // //create a new face using vertices 0, 1, 2
+            // var normal = new THREE.Vector3(0, 0, 1); //optional
+            // var color = new THREE.Color(0xffaa00); //optional
+            // var materialIndex = 0; //optional
+            var face = new THREE.Face3(0, 1, 2);
 
             //add the face to the geometry's faces array
             geometry.faces.push(face);
@@ -68,11 +75,51 @@
             var mesh = new THREE.Mesh(geometry, material);
             scene.add(mesh);
 
+            // レイキャストを作成
+            const raycaster = new THREE.Raycaster();
+
+            canvas.addEventListener('mousemove', onMouseMove, false);
             // 初回実行 → 一度実行されると後はループ設定が有効になる
             tick();
 
+            // マウスを動かしたときのイベント
+            function onMouseMove(event) {
+                const element = event.currentTarget;
+                // canvas要素上のXY座標
+                const x = event.clientX - element.offsetLeft;
+                const y = event.clientY - element.offsetTop;
+                // canvas要素の幅・高さ
+                const w = element.offsetWidth;
+                const h = element.offsetHeight;
+
+                // -1〜+1の範囲で現在のマウス座標を登録する
+                mouse.x = (x / w) * 2 - 1;
+                mouse.y = -(y / h) * 2 + 1;
+
+                // 公式のやり方だと座標が正確にとれない
+                // mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                // mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+            }
+
+
             // 毎フレーム時に実行されるループイベントです
             function tick() {
+                console.log(mouse.x, mouse.y);
+                // レイキャスト = マウス位置からまっすぐに伸びる光線ベクトルを生成
+                raycaster.setFromCamera(mouse, camera);
+                // その光線とぶつかったオブジェクトを得る
+                const intersects = raycaster.intersectObject(mesh);
+
+                if (intersects.length > 0) {
+                    var intersect = intersects[0];
+                    var face = intersect.face;
+                    var fi = intersect.faceIndex;
+                    console.log(fi);
+
+                    face.color.setHex(0xff00ff);
+                    geometry.colorsNeedUpdate = true;
+                }
+
                 requestAnimationFrame(tick); // セットした関数を毎フレーム呼び出す，関数内に書かないとループしない
                 // アニメーション処理を書く
                 renderer.render(scene, camera); // レンダリング，画面更新は明示的に書く
