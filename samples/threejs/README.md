@@ -71,25 +71,100 @@ loader.load('models/3ds/portalgun/portalgun.3ds',  (object) => {
 
 ### OBJ
 
+```html
+<script src="js/loaders/OBJLoader.js"></script>
+```
+
+```javascript
+var reader = new FileReader();
+var arraybuf;
+reader.readAsText(file[0]);
+reader.onload = function () {
+    arraybuf = reader.result;
+    console.log(arraybuf);
+
+    geometry = load_obj(arraybuf);
+    add_geometry(geometry);
+}
+function load_obj(arraybuf) { // 引数はテキストデータ(バイナリも可？)
+    var loader = new THREE.OBJLoader();
+    return loader.parse(arraybuf); // groupが返ってくる
+}
+```
+
+
+
+- [source](./load_file3_threejs_obj.html)
 - https://threejs.org/docs/index.html#examples/en/loaders/OBJLoader
 
 - OBJファイルのテキスト文字列をそのまま渡してObject3D作ることも可能
 - 生成される形式は`BufferGeometry`
+- 頂点は各faceごとに別々に作成される
+  - 6面あったら18頂点定義される。重複あっても関係ない
+  - index属性は使用しない
+- objectを複数読み込んでgroupにまとめる前提で作っている
+  - 中身にアクセスしたい場合は`group.children[0].geometry.attributes.position`みたいに使う
+  - [Group型](https://threejs.org/docs/index.html#api/en/objects/Group)
+- [ライブラリソースコード](https://github.com/mrdoob/three.js/blob/master/examples/jsm/loaders/OBJLoader.js)
+  - this.verticesに頂点pushしてる
+  - this.normalsとかにもpushしてる
+  - objectは独自の辞書型になっている https://github.com/mrdoob/three.js/blob/master/examples/jsm/loaders/OBJLoader.js#L69
+    - object.geometry.verticesに頂点座標が入る
+  - 頂点とかの情報をBufferGeometryに設定 https://github.com/mrdoob/three.js/blob/master/examples/jsm/loaders/OBJLoader.js#L743
+  - 最終的にmeshが作られて https://github.com/mrdoob/three.js/blob/master/examples/jsm/loaders/OBJLoader.js#L865
+  - containerに入れられたものが返される https://github.com/mrdoob/three.js/blob/master/examples/jsm/loaders/OBJLoader.js#L873
 
 
 
 ### PLY
 
+```html
+<script src="js/loaders/PLYLoader.js"></script>
+```
+
+```javascript
+function load_obj(arraybuf) { // 引数はテキスト or バイナリ
+    var loader = new THREE.PLYLoader();
+    return loader.parse(arraybuf); // geometryが返ってくる
+}
+```
+
+- [source](./load_file3_threejs_ply.html)
 - https://github.com/mrdoob/three.js/blob/master/examples/js/loaders/PLYLoader.js
 
 - テキストとバイナリの両方に対応
 - 生成される形式は`BufferGeometry`
+- OBJとは違い、Group化はされない。BufferGeometry型がそのまま返される
 
 ```javascript
 var loader = new THREE.PLYLoader();
 loader.load('./models/ply/ascii/dolphins.ply', function (geometry) {
 	scene.add( new THREE.Mesh( geometry ) );
 } );
+```
+
+
+
+## ファイル出力
+
+```html
+<script src="js/exporters/PLYExporter.js"></script>
+```
+
+```javascript
+function exportASCII() {
+    exporter.parse(mesh, function (result) {
+        saveString(result, 'box.ply');
+    });
+}
+function saveString(text, filename) {
+    save(new Blob([text], { type: 'text/plain' }), filename);
+}
+function save(blob, filename) {
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+}
 ```
 
 

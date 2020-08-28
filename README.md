@@ -1,6 +1,6 @@
 # Sample codes of WebAssembly and three.js
 
-動作環境はwindows10, 64bit
+
 
 # Install
 

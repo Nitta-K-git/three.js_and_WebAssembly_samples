@@ -1,0 +1,137 @@
+<!-- 
+    PLYファイルを出力するサンプル
+    公式のコードをほぼそのまま使っている
+ -->
+
+<html>
+
+<head>
+    <meta http-equiv="content-type" charset="utf-8">
+</head>
+
+<body>
+    <h2>3Dファイルの保存・表示</h2>
+    <!-- <input type="button" value="保存" onclick="file_save()"> -->
+    <button id="exportASCII">export ASCII</button>
+    <!-- <input type="file" id="inputfile" /> -->
+    <!-- <input type="file" id="inputfile" /> -->
+    <!-- 描画エリアを用意 -->
+    <canvas id="myCanvas"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
+    <!-- <script src="js/loaders/OBJLoader.js"></script> -->
+    <!-- <script src="js/loaders/PLYLoader.js"></script> -->
+    <script src="js/exporters/PLYExporter.js"></script>
+    <script src="js/controls/OrbitControls.js"></script>
+    <script type="text/javascript">
+        var mesh;
+        var exporter;
+
+        function file_save() {
+            console.log("save!!!");
+            // Instantiate an exporter
+            var exporter = new THREE.PLYExporter();
+
+            // Parse the input and generate the ply output
+            var data = exporter.parse(mesh);
+            downloadFile(data);
+        }
+        function exportASCII() {
+            exporter.parse(mesh, function (result) {
+                saveString(result, 'box.ply');
+            });
+        }
+        function saveString(text, filename) {
+            save(new Blob([text], { type: 'text/plain' }), filename);
+        }
+        function save(blob, filename) {
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+
+        // var inputfile = document.getElementById('inputfile')
+        // var scene;
+        // var geometry;
+
+        // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
+        window.addEventListener('load', init);
+
+        // inputfile.addEventListener("change", function (e) {
+        //     // テキストとして読み込んでログに表示
+        //     var file = e.target.files;
+
+        //     var reader = new FileReader();
+        //     var arraybuf;
+        //     reader.readAsText(file[0]);
+        //     reader.onload = function () {
+        //         arraybuf = reader.result;
+        //         console.log(arraybuf);
+
+        //         geometry = load_obj(arraybuf);
+        //         add_geometry(geometry);
+        //     }
+
+        //     // reader.readAsArrayBuffer(file[0]);
+        //     // reader.onload = function () {
+        //     //     arraybuf = reader.result;
+        //     // }
+
+        // }, false);
+        var link = document.createElement('a');
+        link.style.display = 'none';
+        document.body.appendChild(link);
+
+        function init() {
+            var buttonExportASCII = document.getElementById('exportASCII');
+            buttonExportASCII.addEventListener('click', exportASCII);
+
+            exporter = new THREE.PLYExporter();
+
+            // サイズを指定
+            const width = 960;
+            const height = 540;
+
+            // レンダラーを作成
+            const renderer = new THREE.WebGLRenderer({
+                canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+
+            // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
+            scene = new THREE.Scene();
+
+            //light
+            var light = new THREE.HemisphereLight();
+            scene.add(light);
+
+            // カメラを作成
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            // カメラの初期座標を設定
+            camera.position.set(0, 0, +1000);
+
+            // カメラコントローラーを作成
+            const controls = new THREE.OrbitControls(camera);
+
+            const material = new THREE.MeshBasicMaterial({ color: 0x6699FF });
+
+            //create a triangular geometry
+            var geometry = new THREE.TorusGeometry(300, 100, 64, 100);
+            mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            // 初回実行 → 一度実行されると後はループ設定が有効になる
+            tick();
+
+            // 毎フレーム時に実行されるループイベントです
+            function tick() {
+                requestAnimationFrame(tick); // セットした関数を毎フレーム呼び出す，関数内に書かないとループしない
+                // アニメーション処理を書く
+                renderer.render(scene, camera); // レンダリング，画面更新は明示的に書く
+            }
+        }
+
+    </script>
+</body>
+
+</html>

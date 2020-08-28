@@ -1,0 +1,156 @@
+<!-- 
+    https://hakuhin.jp/js/dialog.html
+    https://www.e-loop.jp/knowledges/35/
+    OBJファイルを読み込むサンプル
+    テキスト形式で開いたデータをthree.jsのparse関数に渡す
+    OBJはgroup形式のgeometryで返されることに注意
+ -->
+
+<html>
+
+<head>
+    <meta http-equiv="content-type" charset="utf-8">
+</head>
+
+<body>
+    <h2>3Dファイルの読み込み・表示</h2>
+    <input type="file" id="inputfile" />
+    <!-- 描画エリアを用意 -->
+    <canvas id="myCanvas"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
+    <script src="js/loaders/OBJLoader.js"></script>
+    <script src="js/controls/OrbitControls.js"></script>
+    <script type="text/javascript">
+        var inputfile = document.getElementById('inputfile')
+        var scene;
+        var geometry;
+
+        // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
+        window.addEventListener('load', init);
+
+        inputfile.addEventListener("change", function (e) {
+            // テキストとして読み込んでログに表示
+            var file = e.target.files;
+
+            var reader = new FileReader();
+            var arraybuf;
+            reader.readAsText(file[0]);
+            reader.onload = function () {
+                arraybuf = reader.result;
+                console.log(arraybuf);
+
+                geometry = load_obj(arraybuf);
+                add_geometry(geometry);
+            }
+
+            // reader.readAsArrayBuffer(file[0]);
+            // reader.onload = function () {
+            //     arraybuf = reader.result;
+            // }
+
+        }, false);
+
+        function load_obj(arraybuf) {
+            var loader = new THREE.OBJLoader();
+            return loader.parse(arraybuf);
+        }
+        function add_geometry(geometry) {
+            // geometry
+            // var material = new THREE.MeshBasicMaterial({
+            //     color: 0x00cc00
+            // });
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x66FF00, roughness:0.5
+            });
+
+            // geometry.traverse(function (child) {
+            //     if (child instanceof THREE.Mesh) {
+            //         child.material = material;
+            //     }
+            // });
+
+            // var mesh = new THREE.Mesh(geometry, material);
+            // scene.add(mesh);
+
+            geometry.traverse(function (child) {
+                if (child instanceof THREE.Mesh) {
+                    child.material = material;
+                }
+            });
+
+            scene.add(geometry);
+        }
+        function init() {
+
+            // サイズを指定
+            const width = 960;
+            const height = 540;
+
+            // レンダラーを作成
+            const renderer = new THREE.WebGLRenderer({
+                canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+
+            // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
+            scene = new THREE.Scene();
+
+            //light
+            var light = new THREE.HemisphereLight();
+            scene.add(light);
+
+            // カメラを作成
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            // カメラの初期座標を設定
+            camera.position.set(0, 0, +1000);
+
+            // カメラコントローラーを作成
+            const controls = new THREE.OrbitControls(camera);
+
+            // geometry
+            // var material = new THREE.MeshStandardMaterial({
+            //     color: 0x00cc00
+            // });
+            const material = new THREE.MeshStandardMaterial({color: 0x6699FF, roughness:0.5});
+
+            //create a triangular geometry
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(-50, -50, 0));
+            geometry.vertices.push(new THREE.Vector3(50, -50, 0));
+            geometry.vertices.push(new THREE.Vector3(50, 50, 0));
+            geometry.vertices.push(new THREE.Vector3(-50, 50, 0));
+
+            //create a new face using vertices 0, 1, 2
+            var normal = new THREE.Vector3(0, 0, 1); //optional
+            var color = new THREE.Color(0xffaa00); //optional
+            var materialIndex = 0; //optional
+            var face = new THREE.Face3(0, 1, 2, normal, color, materialIndex);
+
+            //add the face to the geometry's faces array
+            geometry.faces.push(face);
+            geometry.faces.push(new THREE.Face3(1, 2, 3));
+
+            //the face normals and vertex normals can be calculated automatically if not supplied above
+            geometry.computeFaceNormals();
+            geometry.computeVertexNormals();
+
+            var mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+
+            // 初回実行 → 一度実行されると後はループ設定が有効になる
+            tick();
+
+            // 毎フレーム時に実行されるループイベントです
+            function tick() {
+                requestAnimationFrame(tick); // セットした関数を毎フレーム呼び出す，関数内に書かないとループしない
+                // アニメーション処理を書く
+                renderer.render(scene, camera); // レンダリング，画面更新は明示的に書く
+            }
+        }
+
+    </script>
+</body>
+
+</html>
