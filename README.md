@@ -1,15 +1,19 @@
 # Sample codes of WebAssembly and three.js
 
-
-
 # Install
 
-## Install emsdk
+## three.js
+
+You can download the library from [github](https://github.com/mrdoob/three.js/tree/dev/examples)
+
+## WebAssembly
+
+### Install emsdk
 
 - [Download and install — Emscripten 1.39.20 documentation](https://emscripten.org/docs/getting_started/downloads.html)
 
-1. https://github.com/emscripten-core/emsdk をcloneする
-2. install, activate, PATHの設定をコマンドプロンプトで行う
+1. clone from github https://github.com/emscripten-core/emsdk.
+2. execute install, activate and env.bat command (below command are on windows10 version, detail and another OS command is [here](https://emscripten.org/docs/getting_started/downloads.html)).
 
 ```
 $ emsdk install 1.39.7
@@ -17,11 +21,12 @@ $ emsdk activate 1.39.7
 $ emsdk_env.bat
 ```
 
-## Install MinGW for CMAKE
+### Install MinGW for CMAKE
 
-[EmscriptenとCMakeでのビルド方法](https://gist.github.com/faithandbrave/9b3d439d135e63abdbe7)の通りにMinGWをインストール、"C:\MinGW\bin" のパスを通す
+- Install MinGW [EmscriptenとCMakeでのビルド方法](https://gist.github.com/faithandbrave/9b3d439d135e63abdbe7)
+- set path of "C:\MinGW\bin"
 
-## Install nginx
+### Install nginx
 
 - [Windows10環境にNginxをインストールする - Qiita](https://qiita.com/ita3qiita/items/35f0b0d1b61c801b738d)
 - [Windowsにnginxをセットアップする - Qiita](https://qiita.com/tatuno/items/44ec8130d7544d1534f7)
@@ -31,7 +36,7 @@ http://nginx.org/download/nginx-1.18.0.zip をダウンロードして解凍
 nginx.exeを起動して、http://localhost/ にアクセスして起動画面が出ればOK
 
 
-# 動作確認方法
+# Get started
 
 `C:\soft\nginx-1.18.0\html\` のパスに適当なフォルダを作って、html, js, wasmファイルを置く
 
@@ -40,10 +45,10 @@ nginx.exeを起動して、http://localhost/ にアクセスして起動画面�
 
 # WebAssembly sample codes
 
-- template with cmake : [CODE](./samples/cmake_template)
-- IDEで自動補完を使えるようにする : [CODE](./samples/cmake_with_Qt)
-- C++のVectorデータをjs側に渡す : [CODE](./samples/vector_to_js)
-- jsのデータをC++側に渡す : [CODE](./samples/vector_from_js)
+- template with cmake : [CODE](./samples/webasm/cmake_template)
+- IDEで自動補完を使えるようにする : [CODE](./samples/webasm/cmake_with_Qt)
+- C++のVectorデータをjs側に渡す : [CODE](./samples/webasm/vector_to_js)
+- jsのデータをC++側に渡す : [CODE](./samples/webasm/vector_from_js)
 
 
 
