@@ -29,11 +29,10 @@ using namespace emscripten;
 
 CMeshO mesh;
 
-// int main()
-// {
-//     CMeshO mesh;
-//     std::cout << "Hello World" << std::endl;
-// }
+int main()
+{
+    std::cout << "Hello MeshLab" << std::endl;
+}
 
 void print_array(std::vector<int> &v){
 	for(auto a:v){

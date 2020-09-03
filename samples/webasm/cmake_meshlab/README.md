@@ -11,7 +11,7 @@ You have to set some environment variables below.
 
 And if you want to use nginx, you also set below environment variable
 
-- `NGINX_DIR`
+- `NGINX_LOC_DIR`
 
 Then, you can compile by cmake command.
 
