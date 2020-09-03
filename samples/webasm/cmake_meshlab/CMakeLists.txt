@@ -17,6 +17,13 @@ add_definitions(-DMESHLAB_SCALAR=float) # you should add this definition if you 
 
 file(TO_CMAKE_PATH $ENV{EMSDK_DIR} EMSDK_DIR)
 
+# set output file directory
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${NGINX_DIR}/html/${PROJECT_NAME})
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${NGINX_DIR}/html/${PROJECT_NAME})
+
+# Add Executable
+add_executable(${PROJECT_NAME})
+
 target_include_directories(${PROJECT_NAME}
   PUBLIC
   ${EIGEN3_INCLUDE_DIR}
@@ -25,12 +32,6 @@ target_include_directories(${PROJECT_NAME}
   ${EMSDK_DIR}
 )
 
-# set output file directory
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${NGINX_DIR}/html/${PROJECT_NAME})
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${NGINX_DIR}/html/${PROJECT_NAME})
-
-# Add Executable
-add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME}
   PRIVATE
     main.cpp
