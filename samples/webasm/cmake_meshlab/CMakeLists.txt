@@ -1,44 +1,63 @@
 cmake_minimum_required( VERSION 3.6 )
 
-project(meshlab_sample CXX)
+# Create Project
+get_filename_component(ProjectId ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+string(REPLACE " " "_" ProjectId ${ProjectId})
+project(${ProjectId} CXX)
+
 set(CMAKE_CXX_STANDARD 11)
-# set(CMAKE_CXX_STANDARD 14) # vcglib can not support over c++17
 
-# set(CMAKE_BUILD_TYPE Debug)
+# define path of Eigen
+file(TO_CMAKE_PATH $ENV{EIGEN3_INCLUDE_DIR} EIGEN3_INCLUDE_DIR)
+# define path of vcglib
+file(TO_CMAKE_PATH $ENV{VCGLIB_DIR} VCGLIB_DIR)
+# define path of meshlab source
+file(TO_CMAKE_PATH $ENV{MESHLAB_DIR} MESHLAB_DIR)
+add_definitions(-DMESHLAB_SCALAR=float) # you should add this definition if you use meshlab source
 
-add_executable(
-    sample main.cpp
-    # quadric_simp.h
-    # quadric_simp.cpp
+file(TO_CMAKE_PATH $ENV{EMSDK_DIR} EMSDK_DIR)
+
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+  ${EIGEN3_INCLUDE_DIR}
+  ${VCGLIB_DIR}
+  ${MESHLAB_DIR}
+  ${EMSDK_DIR}
+)
+
+# set output file directory
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${NGINX_DIR}/html/${PROJECT_NAME})
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${NGINX_DIR}/html/${PROJECT_NAME})
+
+# Add Executable
+add_executable(${PROJECT_NAME})
+target_sources(${PROJECT_NAME}
+  PRIVATE
+    main.cpp
 )
 
 if (EMSCRIPTEN)
-	set(CMAKE_CXX_FLAGS "--bind")
-else()
-    set( EM_DIR C:/Users/Public/Documents/GitHub/emsdk/upstream/emscripten/system/include)
-    include_directories(${EM_DIR})
+    set(CMAKE_CXX_FLAGS "--bind")
+
+    # if defined NGINX_DIR, copy output files to NGINX_DIR
+    if(DEFINED ENV{NGINX_DIR})
+        file(TO_CMAKE_PATH $ENV{NGINX_DIR} NGINX_DIR)
+        
+        # make output directory for nginx
+        file(MAKE_DIRECTORY ${NGINX_DIR}/html/${PROJECT_NAME})
+
+        # copy neccesarry files to nginx directory after building
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy
+            ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.js
+            ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.wasm
+            ${NGINX_DIR}/html/${PROJECT_NAME}
+        )
+        # html file is not related with building, so use file command
+        file(COPY
+            index.html
+            DESTINATION
+            ${NGINX_DIR}/html/${PROJECT_NAME}
+        )
+    endif()
 endif()
-
-# set(CMAKE_CXX_FLAGS_RELEASE "/O2 -DQT_NO_DEBUG_OUTPUT /DNDEBUG") # disable qDebug output, disable assert
-
-add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
-string(REPLACE "/W3" "/w" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-
-file(TO_CMAKE_PATH $ENV{EIGEN3_INCLUDE_DIR} EIGEN3_INCLUDE_DIR)
-include_directories("${EIGEN3_INCLUDE_DIR}")
-
-# ADD_DEFINITIONS(-DQT_NO_KEYWORDS) # Qt signal/slot setting
-# find_package(pybind11 REQUIRED)
-
-message("---vcglib setting---")
-file(TO_CMAKE_PATH $ENV{VCGLIB_DIR} VCGLIB_DIR)
-message(${VCGLIB_DIR})
-include_directories(${VCGLIB_DIR})
-
-set( MESHLAB_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-message(${MESHLAB_DIR})
-include_directories(${MESHLAB_DIR})
-
-# Additional Dependencies
-add_definitions(-DMESHLAB_SCALAR=float)
-

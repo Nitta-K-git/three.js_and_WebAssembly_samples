@@ -1,17 +1,17 @@
 #include <iostream>
-#include <meshlab/common/ml_mesh_type.h>
+#include <common/ml_mesh_type.h>
 #include <vcg/complex/algorithms/create/platonic.h>
 #include <vcg/complex/complex.h>
 
 #include <vcg/complex/algorithms/update/curvature.h>
 #include <vcg/complex/algorithms/update/color.h>
 #include <vcg/complex/algorithms/clean.h>
-#include <vcg/complex/algorithms/create/resampler.h>
-#include <vcg/complex/algorithms/local_optimization/tri_edge_collapse_quadric.h>
-#include <vcg/complex/algorithms/local_optimization.h>
+// #include <vcg/complex/algorithms/create/resampler.h>
+// #include <vcg/complex/algorithms/local_optimization/tri_edge_collapse_quadric.h>
+// #include <vcg/complex/algorithms/local_optimization.h>
 // #include "quadric_simp.h" // for simplification collapse edge
-#include <vcg/complex/algorithms/clustering.h>
-#include <vcg/complex/algorithms/create/plymc/plymc.h>
+// #include <vcg/complex/algorithms/clustering.h>
+// #include <vcg/complex/algorithms/create/plymc/plymc.h>
 
 // #include <iostream>
 // #include <fstream>
