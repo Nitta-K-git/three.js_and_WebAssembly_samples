@@ -4,14 +4,13 @@
 <head>
     <meta charset="utf-8" />
     <!-- JSライブラリ読み込み，CDNを使用 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
     <script src="../js/controls/OrbitControls.js"></script>
     <script>
         // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
         window.addEventListener('load', init);
 
         function init() {
-
             // サイズを指定
             const width = 960;
             const height = 540;
@@ -22,6 +21,7 @@
             });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+            document.body.appendChild(renderer.domElement);
 
             // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
             const scene = new THREE.Scene();
@@ -32,7 +32,7 @@
             camera.position.set(0, 0, +1000);
 
             // カメラコントローラーを作成
-            const controls = new THREE.OrbitControls(camera);
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
 
             // 平行光源
             const directionalLight = new THREE.DirectionalLight(0xffffff);

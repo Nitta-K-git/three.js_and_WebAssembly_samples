@@ -1,0 +1,58 @@
+<meta charset="utf-8" />
+<html>
+
+<body>
+    <form>
+        <input type="file" id="file" multiple> <br>
+        <p id="text_result"></p>
+    </form>
+    <script type="text/javascript">
+        var input_file = document.getElementById("file");
+        input_file.onchange = function (e) {
+            if (input_file.value) {
+                console.log("ファイルが選択された:" + input_file.value);
+            } else {
+                console.log("ファイルが未選択");
+                return;
+            }
+
+            // 読み込んだファイルの情報をすべて表示
+            console.log(e.target.files);
+
+            // テキストとして読み込んでログに表示
+            var file = e.target.files;
+            var reader = new FileReader();
+
+            reader.readAsText(file[0]);
+            reader.onload = function () {
+                console.log(reader.result);
+                // document.getElementById("text_result").innerHTML = reader.result; // そのまま代入すると改行コードがスペースになる
+            }
+
+            // ArrayBufferとして読み込み
+            // reader.readAsArrayBuffer(file[0]);
+            // reader.onload = function () {
+            //     console.log(reader.result);
+            // }
+
+            // FileList オブジェクトを取得する
+            var file_list = input_file.files;
+            if (!file_list) return;
+
+            var i;
+            var num = file_list.length;
+            for (i = 0; i < num; i++) {
+                // File オブジェクトを取得する
+                var file = file_list[i];
+
+                // 出力テスト
+                console.log("id:" + i);
+                console.log("name:" + file.name);
+                console.log("size:" + file.size);
+                console.log("type:" + file.type);
+            }
+        };
+    </script>
+</body>
+
+</html>

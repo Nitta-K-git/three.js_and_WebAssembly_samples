@@ -4,35 +4,32 @@
 <head>
     <meta charset="utf-8" />
     <!-- JSライブラリ読み込み，CDNを使用 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
     <script src="../js/controls/OrbitControls.js"></script>
     <script>
         // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
         window.addEventListener('load', init);
 
         function init() {
-
-            // サイズを指定
             const width = 960;
             const height = 540;
 
-            // レンダラーを作成
             const renderer = new THREE.WebGLRenderer({
                 canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
             });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+            document.body.appendChild(renderer.domElement);
 
             // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
             const scene = new THREE.Scene();
 
             // カメラを作成
             const camera = new THREE.PerspectiveCamera(45, width / height);
-            // カメラの初期座標を設定
             camera.position.set(0, 0, +10);
 
             // カメラコントローラーを作成
-            const controls = new THREE.OrbitControls(camera);
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
 
             var geometry = new THREE.BoxBufferGeometry(1, 1, 1);
             var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
@@ -44,20 +41,17 @@
             cubeB.position.set(-1, -1, 0);
 
             //create a group and add the two cubes
-            //These cubes can now be rotated / scaled etc as a group
+            //These cubes can be rotated / scaled etc as a group
             var group = new THREE.Group();
             group.add(cubeA);
             group.add(cubeB);
 
             scene.add(group);
 
-            // 初回実行 → 一度実行されると後はループ設定が有効になる
             tick();
 
-            // 毎フレーム時に実行されるループイベントです
             function tick() {
                 requestAnimationFrame(tick); // セットした関数を毎フレーム呼び出す，関数内に書かないとループしない
-                // アニメーション処理を書く
                 renderer.render(scene, camera); // レンダリング，画面更新は明示的に書く
             }
         }
@@ -65,7 +59,6 @@
 </head>
 
 <body>
-    <!-- 描画エリアを用意 -->
     <canvas id="myCanvas"></canvas>
 </body>
 

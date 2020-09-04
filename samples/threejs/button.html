@@ -3,86 +3,14 @@
 
 <head>
     <meta charset="utf-8" />
-    <!-- JSライブラリ読み込み，CDNを使用 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"></script>
-    <script src="../js/controls/OrbitControls.js"></script>
     <script>
-        // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
-        window.addEventListener('load', init);
-
-        function init() {
-
-            // サイズを指定
-            const width = 960;
-            const height = 540;
-
-            // レンダラーを作成
-            const renderer = new THREE.WebGLRenderer({
-                canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
-            });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
-
-            // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
-            const scene = new THREE.Scene();
-
-            // カメラを作成
-            const camera = new THREE.PerspectiveCamera(45, width / height);
-            // カメラの初期座標を設定
-            camera.position.set(0, 0, +1000);
-
-            // カメラコントローラーを作成
-            const controls = new THREE.OrbitControls(camera);
-
-            // 平行光源
-            const directionalLight = new THREE.DirectionalLight(0xffffff);
-            directionalLight.position.set(1, 1, 1);
-            scene.add(directionalLight);
-
-            const directionalLight2 = new THREE.DirectionalLight(0xffffff);
-            directionalLight2.position.set(-1, -1, -1);
-            scene.add(directionalLight2);
-
-            // ポイント光源
-            // const pointLight = new THREE.PointLight(0xffffff, 2, 1000);
-            // scene.add(pointLight);
-            // const pointLightHelper = new THREE.PointLightHelper(pointLight, 30);
-            // scene.add(pointLightHelper);
-            // pointLight.position.set(1000,1000,1000);
-
-            // 環境光源
-            const light = new THREE.AmbientLight(0x555555, 1.0);
-            scene.add(light);
-
-            // geometryを作成
-            const geometry = new THREE.BoxGeometry(400, 400, 400);
-            // const geometry = new THREE.TorusGeometry(300, 100, 64, 100);
-            const material = new THREE.MeshStandardMaterial({
-                color: 0x6699ff,
-                roughness: 0.5,
-            });
-            const box = new THREE.Mesh(geometry, material); // Mesh型が表示オブジェクト，形状＋材質
-            scene.add(box); // 空間に追加
-
-            // 初回実行 → 一度実行されると後はループ設定が有効になる
-            tick();
-
-            // 毎フレーム時に実行されるループイベントです
-            function tick() {
-                requestAnimationFrame(tick); // セットした関数を毎フレーム呼び出す，関数内に書かないとループしない
-                // アニメーション処理を書く
-                renderer.render(scene, camera); // レンダリング，画面更新は明示的に書く
-            }
-        }
-        function button1(){
+        function button1() {
             console.log("pushed!!!");
         }
     </script>
 </head>
 
 <body>
-    <!-- 描画エリアを用意 -->
-    <canvas id="myCanvas"></canvas>
     <input type="button" value="ボタン" onclick="button1()">
 </body>
 

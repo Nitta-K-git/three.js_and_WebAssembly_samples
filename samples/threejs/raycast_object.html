@@ -1,0 +1,163 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
+  <script>
+    // ページの読み込みを待つ
+    window.addEventListener('load', init);
+
+    function init() {
+      // サイズを指定
+      const width = 960;
+      const height = 540;
+
+      // マウス座標管理用のベクトルを作成
+      const mouse = new THREE.Vector2();
+
+      // canvas 要素の参照を取得する
+      const canvas = document.querySelector('#myCanvas');
+
+      // レンダラーを作成
+      const renderer = new THREE.WebGLRenderer({
+        canvas: canvas
+      });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(width, height);
+
+      // シーンを作成
+      const scene = new THREE.Scene();
+
+      // カメラを作成
+      const camera = new THREE.PerspectiveCamera(45, width / height);
+      camera.position.set(0, 0, +1000);
+
+      // geometry
+      var geometry = new THREE.BufferGeometry();
+
+      var indices = [];
+      var vertices = [];
+      var normals = [];
+      var colors = [];
+
+      var size = 200;
+      var segments = 10;
+
+      var halfSize = size / 2;
+      var segmentSize = size / segments;
+
+      // generate vertices, normals and color data for a simple grid geometry
+      // 頂点をグリッド上に定義
+      for (var i = 0; i <= segments; i++) {
+        var y = (i * segmentSize) - halfSize;
+        for (var j = 0; j <= segments; j++) {
+          var x = (j * segmentSize) - halfSize;
+
+          vertices.push(x, - y, 0);
+          normals.push(0, 0, 1);
+
+          var r = (x / size) + 0.5;
+          var g = (y / size) + 0.5;
+
+          colors.push(r, g, 1);
+        }
+      }
+
+      // generate indices (data for element array buffer)
+      // 面を頂点のインデックス指定で定義
+      for (var i = 0; i < segments; i++) {
+        for (var j = 0; j < segments; j++) {
+          var a = i * (segments + 1) + (j + 1);
+          var b = i * (segments + 1) + j;
+          var c = (i + 1) * (segments + 1) + j;
+          var d = (i + 1) * (segments + 1) + (j + 1);
+
+          // generate two faces (triangles) per iteration
+
+          indices.push(a, b, d); // face one
+          indices.push(b, c, d); // face two
+        }
+      }
+
+      //
+      geometry.setIndex(indices);
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+      var material = new THREE.MeshPhongMaterial({
+        side: THREE.DoubleSide,
+        vertexColors: true,
+        // color: '0xff0000', // red
+        // vertexColors: THREE.FaceColors,
+        flatShading: true,
+      });
+
+      mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      // 平行光源
+      const directionalLight = new THREE.DirectionalLight(0xffffff);
+      directionalLight.position.set(1, 1, 1);
+      scene.add(directionalLight);
+
+      // 環境光源
+      const ambientLight = new THREE.AmbientLight(0x333333);
+      scene.add(ambientLight);
+
+      // レイキャストを作成
+      const raycaster = new THREE.Raycaster();
+
+      canvas.addEventListener('mousemove', handleMouseMove);
+      tick();
+
+      // マウスを動かしたときのイベント
+      function handleMouseMove(event) {
+        const element = event.currentTarget;
+        // canvas要素上のXY座標
+        const x = event.clientX - element.offsetLeft;
+        const y = event.clientY - element.offsetTop;
+        // canvas要素の幅・高さ
+        const w = element.offsetWidth;
+        const h = element.offsetHeight;
+
+        // -1〜+1の範囲で現在のマウス座標を登録する
+        mouse.x = (x / w) * 2 - 1;
+        mouse.y = -(y / h) * 2 + 1;
+      }
+
+      // 毎フレーム時に実行されるループイベントです
+      function tick() {
+        // レイキャスト = マウス位置からまっすぐに伸びる光線ベクトルを生成
+        raycaster.setFromCamera(mouse, camera);
+
+        // その光線とぶつかったオブジェクトを得る
+        const intersects = raycaster.intersectObject(mesh);
+
+        if (intersects.length > 0) {
+          var intersect = intersects[0];
+          var face = intersect.face;
+          var fi = intersect.faceIndex;
+          console.log(fi);
+
+          // face.color.setHex(0x0000ff);
+          colors[fi * 3 + 0] = 1;
+          colors[fi * 3 + 1] = 0;
+          colors[fi * 3 + 2] = 0;
+          mesh.material.colorsNeedUpdate = true;
+          // .attributes.attributeName.needsUpdate = true;
+        }
+
+        // レンダリング
+        renderer.render(scene, camera);
+        requestAnimationFrame(tick);
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <canvas id="myCanvas"></canvas>
+</body>
+
+</html>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <!-- JSライブラリ読み込み，CDNを使用 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
     <script>
         // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
         window.addEventListener('load', init);
@@ -34,6 +34,7 @@
             const material = new THREE.MeshBasicMaterial({ // 材質を表す, 適当なカラーを割り振るマテリアル
                 color: 0x6699FF
             });
+
             const mesh = new THREE.Mesh(geometry, material); // Mesh型が表示オブジェクト，形状＋材質
             scene.add(mesh); // 空間に追加
 

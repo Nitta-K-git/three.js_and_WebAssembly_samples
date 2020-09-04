@@ -92,6 +92,8 @@ nginxからgithub上のhtmlファイルを直接参照できるように設定�
 
 # three.js sample codes
 
+Summarize of samples is [here](./samples/threejs)
+
 - template : [CODE](./samples/threejs/template.html)
 - define mesh on the fly : [CODE](./samples/threejs/geometry.html)
 - picking object(raycast) : [CODE](./samples/threejs/raycast.html)

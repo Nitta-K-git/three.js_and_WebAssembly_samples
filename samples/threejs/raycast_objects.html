@@ -7,6 +7,8 @@
     // ページの読み込みを待つ
     window.addEventListener('load', init);
 
+    function formatByArr(msg) { var args = []; for (var i = 1; i < arguments.length; i++) { args[i - 1] = arguments[i]; } return msg.replace(/\{(\d+)\}/g, function (m, k) { return args[k]; }); };
+
     function init() {
       // サイズを指定
       const width = 960;
@@ -17,7 +19,6 @@
 
       // canvas 要素の参照を取得する
       const canvas = document.querySelector('#myCanvas');
-
       // レンダラーを作成
       const renderer = new THREE.WebGLRenderer({
         canvas: canvas
@@ -32,69 +33,25 @@
       const camera = new THREE.PerspectiveCamera(45, width / height);
       camera.position.set(0, 0, +1000);
 
-      // geometry
-      var geometry = new THREE.BufferGeometry();
+      const geometry = new THREE.BoxBufferGeometry(50, 50, 50);
 
-      var indices = [];
-      var vertices = [];
-      var normals = [];
-      var colors = [];
+      // マウスとの交差を調べたいものは配列に格納する
+      const meshList = [];
+      for (let i = 0; i < 200; i++) {
+        const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
 
-      var size = 200;
-      var segments = 10;
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.x = (Math.random() - 0.5) * 800;
+        mesh.position.y = (Math.random() - 0.5) * 800;
+        mesh.position.z = (Math.random() - 0.5) * 800;
+        mesh.rotation.x = Math.random() * 2 * Math.PI;
+        mesh.rotation.y = Math.random() * 2 * Math.PI;
+        mesh.rotation.z = Math.random() * 2 * Math.PI;
+        scene.add(mesh);
 
-      var halfSize = size / 2;
-      var segmentSize = size / segments;
-
-      // generate vertices, normals and color data for a simple grid geometry
-      // 頂点をグリッド上に定義
-      for (var i = 0; i <= segments; i++) {
-        var y = (i * segmentSize) - halfSize;
-        for (var j = 0; j <= segments; j++) {
-          var x = (j * segmentSize) - halfSize;
-
-          vertices.push(x, - y, 0);
-          normals.push(0, 0, 1);
-
-          var r = (x / size) + 0.5;
-          var g = (y / size) + 0.5;
-
-          colors.push(r, g, 1);
-        }
+        // 配列に保存
+        meshList.push(mesh);
       }
-
-      // generate indices (data for element array buffer)
-      // 面を頂点のインデックス指定で定義
-      for (var i = 0; i < segments; i++) {
-        for (var j = 0; j < segments; j++) {
-          var a = i * (segments + 1) + (j + 1);
-          var b = i * (segments + 1) + j;
-          var c = (i + 1) * (segments + 1) + j;
-          var d = (i + 1) * (segments + 1) + (j + 1);
-
-          // generate two faces (triangles) per iteration
-
-          indices.push(a, b, d); // face one
-          indices.push(b, c, d); // face two
-        }
-      }
-
-      //
-      geometry.setIndex(indices);
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-      geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-      var material = new THREE.MeshPhongMaterial({
-        side: THREE.DoubleSide,
-        vertexColors: true, 
-        // color: '0xff0000', // red
-        // vertexColors: THREE.FaceColors,
-        flatShading: true,
-      });
-
-      mesh = new THREE.Mesh(geometry, material);
-      scene.add(mesh);
 
       // 平行光源
       const directionalLight = new THREE.DirectionalLight(0xffffff);
@@ -132,21 +89,24 @@
         raycaster.setFromCamera(mouse, camera);
 
         // その光線とぶつかったオブジェクトを得る
-        const intersects = raycaster.intersectObject(mesh);
+        const intersects = raycaster.intersectObjects(meshList);
 
-        if (intersects.length > 0) {
-          var intersect = intersects[0];
-          var face = intersect.face;
-          var fi = intersect.faceIndex;
-          console.log(fi);
-
-          // face.color.setHex(0x0000ff);
-          colors[fi*3 + 0] = 1;
-          colors[fi*3 + 1] = 0;
-          colors[fi*3 + 2] = 0;
-          mesh.material.colorsNeedUpdate = true;
-          // .attributes.attributeName.needsUpdate = true;
-        }
+        meshList.map(mesh => {
+          // 交差しているオブジェクトが1つ以上存在し、
+          // 交差しているオブジェクトの1番目(最前面)のものだったら
+          if (intersects.length > 0 && mesh === intersects[0].object) {
+            let m = intersects[0];
+            // 色を赤くする
+            mesh.material.color.setHex(0xff0000);
+            let elem = document.getElementById("hit_obj_id");
+            elem.innerHTML = "オブジェクトID : " + String(m.object.id);
+            document.getElementById("hit_face_index").innerHTML = "face index : " + String(m.faceIndex);
+            document.getElementById("hit_pos").innerHTML = formatByArr("pos ({0},{1},{2})", m.point.x.toFixed(2), m.point.y.toFixed(2), m.point.z.toFixed(2));
+          } else {
+            // それ以外は元の色にする
+            mesh.material.color.setHex(0xffffff);
+          }
+        });
 
         // レンダリング
         renderer.render(scene, camera);
@@ -158,6 +118,9 @@
 
 <body>
   <canvas id="myCanvas"></canvas>
+  <p id="hit_obj_id">オブジェクトID : </p>
+  <p id="hit_face_index">face index : </p>
+  <p id="hit_pos">pos ()</p>
 </body>
 
 </html>

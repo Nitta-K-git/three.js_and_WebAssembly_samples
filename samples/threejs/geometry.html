@@ -12,17 +12,15 @@
         window.addEventListener('load', init);
 
         function init() {
-
-            // サイズを指定
             const width = 960;
             const height = 540;
 
-            // レンダラーを作成
             const renderer = new THREE.WebGLRenderer({
                 canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
             });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+            document.body.appendChild(renderer.domElement);
 
             // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
             const scene = new THREE.Scene();
@@ -37,7 +35,7 @@
             camera.position.set(0, 0, +1000);
 
             // カメラコントローラーを作成
-            const controls = new THREE.OrbitControls(camera);
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
 
             // geometry
             var material = new THREE.MeshStandardMaterial({
@@ -52,14 +50,12 @@
             geometry.vertices.push(new THREE.Vector3(-50, 50, 0));
 
             //create a new face using vertices 0, 1, 2
-            var normal = new THREE.Vector3(0, 0, 1); //optional
             var color = new THREE.Color(0xffaa00); //optional
-            var materialIndex = 0; //optional
-            var face = new THREE.Face3(0, 1, 2, normal, color, materialIndex);
+            var face = new THREE.Face3(0, 1, 2, color=color);
 
             //add the face to the geometry's faces array
             geometry.faces.push(face);
-            geometry.faces.push(new THREE.Face3(1, 2, 3));
+            geometry.faces.push(new THREE.Face3(1, 2, 3, color=new THREE.Color(0x0000ff)));
 
             //the face normals and vertex normals can be calculated automatically if not supplied above
             geometry.computeFaceNormals();

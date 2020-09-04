@@ -1,9 +1,9 @@
 <!-- 
     https://hakuhin.jp/js/dialog.html
     https://www.e-loop.jp/knowledges/35/
-    OBJファイルを読み込むサンプル
+    PLYファイルを読み込むサンプル
     テキスト形式で開いたデータをthree.jsのparse関数に渡す
-    OBJはgroup形式のgeometryで返されることに注意
+    PLYはBufferGeometry形式で読み込まれる
  -->
 
 <html>
@@ -18,8 +18,11 @@
     <!-- 描画エリアを用意 -->
     <canvas id="myCanvas"></canvas>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
-    <script src="js/loaders/OBJLoader.js"></script>
-    <script src="js/controls/OrbitControls.js"></script>
+    <!-- <script src="js/loaders/OBJLoader.js"></script> -->
+    <script src="../js/loaders/PLYLoader.js"></script>
+    <script src="../js/controls/OrbitControls.js"></script>
+    <script src="cmake_meshlab_load_file.js"></script>
+
     <script type="text/javascript">
         var inputfile = document.getElementById('inputfile')
         var scene;
@@ -51,34 +54,16 @@
         }, false);
 
         function load_obj(arraybuf) {
-            var loader = new THREE.OBJLoader();
+            var loader = new THREE.PLYLoader();
             return loader.parse(arraybuf);
         }
         function add_geometry(geometry) {
-            // geometry
-            // var material = new THREE.MeshBasicMaterial({
-            //     color: 0x00cc00
-            // });
             const material = new THREE.MeshStandardMaterial({
                 color: 0x66FF00, roughness:0.5
             });
 
-            // geometry.traverse(function (child) {
-            //     if (child instanceof THREE.Mesh) {
-            //         child.material = material;
-            //     }
-            // });
-
-            // var mesh = new THREE.Mesh(geometry, material);
-            // scene.add(mesh);
-
-            geometry.traverse(function (child) {
-                if (child instanceof THREE.Mesh) {
-                    child.material = material;
-                }
-            });
-
-            scene.add(geometry);
+            var mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
         }
         function init() {
 
@@ -90,6 +75,7 @@
             const renderer = new THREE.WebGLRenderer({
                 canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
             });
+            document.body.appendChild( renderer.domElement );
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
 
@@ -106,7 +92,7 @@
             camera.position.set(0, 0, +1000);
 
             // カメラコントローラーを作成
-            const controls = new THREE.OrbitControls(camera);
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
 
             // geometry
             // var material = new THREE.MeshStandardMaterial({
