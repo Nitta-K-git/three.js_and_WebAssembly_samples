@@ -337,6 +337,30 @@ function tick() {
 </html>
 ```
 
+## ヒットした面の色を変える
+
+BufferGeometryなら3つの頂点をすべて色変更する
+
+一括で色をリセットする機能はないようなので、色を戻したい場合は、色を変える度に前の選択の色だけ元に戻すアプローチが現実的
+
+[source](buffergeometry_raycast_sel_face.html)
+
+```javascript
+const intersects = raycaster.intersectObject(mesh);
+if (intersects.length > 0) {
+    var intersect = intersects[0];
+    var face = intersect.face;
+    var fi = intersect.faceIndex;
+    console.log(fi);
+
+    for(let i=0; i<3; ++i){
+        geometry.attributes.color.setXYZ(fi*3+i,1,1,1);
+    }
+    // geometry.faces[fi].color.set(0xffffff); // Geometry型の場合
+    geometry.attributes.color.needsUpdate = true;
+}
+```
+
 
 
 # raycast (object)
@@ -582,11 +606,158 @@ scene.add(mesh);
 
 ## Create BufferGeometry data on the fly
 
-面を定義するのに頂点インデックスを使うこともできるし、頂点だけで直接定義することもできる
+- https://threejs.org/docs/#api/en/core/BufferGeometry
 
-(頂点だけで定義する場合は、重複点も毎回記述する。STLと同じ方式)
+- 面を定義するのに頂点インデックスを使うこともできるし、頂点だけで直接定義することもできる
+- `geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));`
+  - 渡す配列はコピー渡し
+  - リスト型でも`Float32Array`型とかでも渡せる
+- `geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));`
+  - 渡す配列は参照渡し
+  - `Float32Array`とかの型付き配列でないと渡せない
 
+### 頂点だけで面を指定(STL方式)
 
+[source](buffergeometry_vert_only.html)
+
+頂点だけで定義する場合は、重複点も毎回記述する。STLと同じ方式
+
+色は面ごとに区別して指定できる
+
+```javascript
+var geometry = new THREE.BufferGeometry();
+// create a simple square shape. We duplicate the top left and bottom right
+// vertices because each vertex needs to appear once per triangle.
+var vertices = new Float32Array([
+    -1.0, -1.0, 1.0,
+    1.0, -1.0, 1.0,
+    1.0, 1.0, 1.0,
+
+    1.0, 1.0, 1.0,
+    -1.0, 1.0, 1.0,
+    -1.0, -1.0, 1.0
+]);
+
+var colors = [];
+colors.push(
+    1, 0, 0,
+    1, 1, 0,
+    0, 1, 0,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+);
+geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+// itemSize = 3 because there are 3 values (components) per vertex
+// 値を更新する必要があるときはBufferAttributeオブジェクトのneedsUpdateフラグを立てる(https://threejs.org/docs/#api/en/core/BufferAttribute)
+geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+
+var material = new THREE.MeshBasicMaterial({
+    // color: 0xff0000, 
+    vertexColors: true, // 頂点に対して色を設定する場合
+});
+var mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
+```
+
+### 面を頂点インデックスで指定(PLY方式)
+
+[source](buffergeometry_face_index.html)
+
+面を頂点インデックスで指定する。頂点は複数の面で共有できる
+
+色は頂点にしか設定できないため、面ごとに違う色を付けるのは不可
+
+- [three.js - THREE.BufferGeometry - How do I manually set face colors? - Stack Overflow](https://stackoverflow.com/questions/41670308/three-buffergeometry-how-do-i-manually-set-face-colors)
+  - `geometry2 = geometry.toNonIndexed()` でインデックスを使わない形式に変換できる
+
+```javascript
+var geometry = new THREE.BufferGeometry();
+var vertices = new Float32Array([
+    -1.0, -1.0, 1.0,
+    1.0, -1.0, 1.0,
+    1.0, 1.0, 1.0,
+    -1.0, 1.0, 1.0,
+]);
+
+var indices = [];
+indices.push(
+    0, 1, 2,
+    2, 3, 0,
+);
+// Arrayを使う方法だとうまくいかない
+//  var indices = new Uint32Array([
+//      0,1,2,
+//      1,2,3,
+//  ]);
+
+var colors = [];
+colors.push(
+    1, 0, 0,
+    1, 1, 0,
+    0, 1, 0,
+    0, 0, 1,
+);
+geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+// itemSize = 3 because there are 3 values (components) per vertex
+geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+geometry.setIndex(indices);
+
+geometry2 = geometry.toNonIndexed() // 非index型に変換できる
+
+var material = new THREE.MeshBasicMaterial({
+    //color: 0xffff00, 
+    vertexColors: true, // 頂点に対して色を設定する場合
+});
+var mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
+```
+
+### 頂点座標の更新
+
+[source](buffergeometry_face_index_update_pos.html)
+
+- https://threejs.org/docs/#api/en/core/BufferAttribute.needsUpdate
+- [three.js - How to update the Geometry vertex position Objloader - Stack Overflow](https://stackoverflow.com/questions/31859819/how-to-update-the-geometry-vertex-position-objloader)
+- [Three.js: How to Update BufferGeometry Vertices - Stack Overflow](https://stackoverflow.com/questions/20303239/three-js-how-to-update-buffergeometry-vertices)
+
+値を更新する必要があるときはBufferAttributeオブジェクトのneedsUpdateフラグを立てる
+
+```javascript
+// geometryに渡した配列 or geometryの属性を直接編集する → update
+function move_pos() {
+    vertices[0] += 0.1;
+    geometry.attributes.position.array[1] += 0.05;
+    geometry.attributes.position.needsUpdate = true;
+}
+```
+
+### 色情報の更新
+
+[source](buffergeometry_vert_only_update_col.html)
+
+```javascript
+colors = new Float32Array([
+    0, 1, 0,
+    0, 1, 0,
+    0, 1, 0,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+]);
+geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+```
+
+```javascript
+function set_col() {
+    colors[0] = 1;
+    geometry.attributes.color.array[3] = 1;
+    geometry.attributes.color.setX(2, 1);
+    geometry.attributes.color.needsUpdate = true;
+}
+```
 
 
 

@@ -10,6 +10,7 @@
     function formatByArr(msg) { var args = []; for (var i = 1; i < arguments.length; i++) { args[i - 1] = arguments[i]; } return msg.replace(/\{(\d+)\}/g, function (m, k) { return args[k]; }); };
 
     function init() {
+      // サイズを指定
       const width = 960;
       const height = 540;
 

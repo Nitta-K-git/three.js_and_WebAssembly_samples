@@ -1,16 +1,8 @@
-<!-- 
-    https://threejs.org/docs/#api/en/core/BufferGeometry
-    BufferGeometryを使って正方形を作成
-    面は頂点座標を直接指定する方式(インデックスでないので、重複点でも毎回指定する)
- -->
-
 <!DOCTYPE html>
 <html>
 
 <head>
     <meta charset="utf-8" />
-    <!-- JSライブラリ読み込み，CDNを使用 -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/105/three.min.js"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
     <script src="../js/controls/OrbitControls.js"></script>
     <script>
@@ -18,8 +10,6 @@
         window.addEventListener('load', init);
 
         function init() {
-
-            // サイズを指定
             const width = 960;
             const height = 540;
 
@@ -29,6 +19,7 @@
             });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+            document.body.appendChild(renderer.domElement);
 
             // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
             const scene = new THREE.Scene();
@@ -39,15 +30,12 @@
 
             // カメラを作成
             const camera = new THREE.PerspectiveCamera(45, width / height);
-            // カメラの初期座標を設定
-            camera.position.set(0, 0, +10);
+            camera.position.set(0, 0, +5);
 
             // カメラコントローラーを作成
-            const controls = new THREE.OrbitControls(camera);
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
 
             var geometry = new THREE.BufferGeometry();
-            // create a simple square shape. We duplicate the top left and bottom right
-            // vertices because each vertex needs to appear once per triangle.
             var vertices = new Float32Array([
                 -1.0, -1.0, 1.0,
                 1.0, -1.0, 1.0,
@@ -55,17 +43,16 @@
                 -1.0, 1.0, 1.0,
             ]);
 
+            var indices = [];
+            indices.push(
+                0, 1, 2,
+                2, 3, 0,
+            );
             // Arrayを使う方法だとうまくいかない
             //  var indices = new Uint32Array([
             //      0,1,2,
             //      1,2,3,
             //  ]);
-
-            var indices = [];
-            indices.push(
-                0, 1, 2,
-                1, 2, 3,
-            );
 
             var colors = [];
             colors.push(
@@ -74,31 +61,25 @@
                 0, 1, 0,
                 0, 0, 1,
             );
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 
             // itemSize = 3 because there are 3 values (components) per vertex
-            // 値を更新する必要があるときはBufferAttributeオブジェクトのneedsUpdateフラグを立てる(https://threejs.org/docs/#api/en/core/BufferAttribute)
             geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             geometry.setIndex(indices);
 
-            // ライトの影響を受けないシンプルなマテリアル(デフォルトは塗りつぶした感じ)
-            // https://threejs.org/docs/#api/en/materials/MeshBasicMaterial
+            geometry2 = geometry.toNonIndexed() // 非index型に変換できる
+
             var material = new THREE.MeshBasicMaterial({
-                // color: 0xffff00
-                side: THREE.DoubleSide,
-                vertexColors: true, // 頂点に対して色を設定する
+                //color: 0xffff00, 
+                vertexColors: true, // 頂点に対して色を設定する場合
             });
             var mesh = new THREE.Mesh(geometry, material);
-
             scene.add(mesh);
 
-            // 初回実行 → 一度実行されると後はループ設定が有効になる
             tick();
 
-            // 毎フレーム時に実行されるループイベントです
             function tick() {
                 requestAnimationFrame(tick); // セットした関数を毎フレーム呼び出す，関数内に書かないとループしない
-                // アニメーション処理を書く
                 renderer.render(scene, camera); // レンダリング，画面更新は明示的に書く
             }
         }
@@ -106,7 +87,6 @@
 </head>
 
 <body>
-    <!-- 描画エリアを用意 -->
     <canvas id="myCanvas"></canvas>
 </body>
 
