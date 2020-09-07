@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
+    <script src="../js/controls/OrbitControls.js"></script>
+    <script>
+        // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
+        window.addEventListener('load', init);
+
+        var geometry;
+        var vertices;
+        var mesh;
+        var colors;
+
+        function init() {
+            const width = 960;
+            const height = 540;
+
+            // レンダラーを作成
+            const renderer = new THREE.WebGLRenderer({
+                canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+            document.body.appendChild(renderer.domElement);
+
+            // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
+            const scene = new THREE.Scene();
+
+            //light
+            var light = new THREE.HemisphereLight();
+            scene.add(light);
+
+            // カメラを作成
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            camera.position.set(0, 0, +5);
+
+            // カメラコントローラーを作成
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+            geometry = new THREE.Geometry();
+            geometry.vertices.push(
+                new THREE.Vector3(-1, -1, 1),
+                new THREE.Vector3(1, -1, 1),
+                new THREE.Vector3(1, 1, 1),
+                new THREE.Vector3(-1, 1, 1),
+            );
+            geometry.faces.push(
+                new THREE.Face3(0, 1, 2, color=new THREE.Color(0xff0000)),
+                new THREE.Face3(2, 3, 0, color=new THREE.Color(0x00ff00)),
+            );
+            geometry.faces[1].color.setRGB(1,0,0);
+
+            var material = new THREE.MeshBasicMaterial({
+                vertexColors: true,
+                // vertexColors: THREE.FaceColors,
+            });
+            var mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            tick();
+
+            function tick() {
+                requestAnimationFrame(tick); // セットした関数を毎フレーム呼び出す，関数内に書かないとループしない
+                renderer.render(scene, camera); // レンダリング，画面更新は明示的に書く
+            }
+        }
+        function set_col() {
+            geometry.faces[0].color.setRGB(1,1,0);
+            geometry.colorsNeedUpdate = true;
+        }
+    </script>
+</head>
+
+<body>
+    <canvas id="myCanvas"></canvas>
+    <input type="button" value="vertex move test" onclick="set_col()">
+</body>
+
+</html>

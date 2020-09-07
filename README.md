@@ -1,5 +1,9 @@
 # Sample codes of WebAssembly and three.js
 
+
+
+[TOC]
+
 # Install
 
 ## three.js
@@ -56,7 +60,7 @@ nginxからgithub上のhtmlファイルを直接参照できるように設定�
 
 1. `nginx-1.18.0\conf\nginx.conf`のファイルを開く
 
-2. htttp → server内のlocationの項目を追加する
+2. http → server内のlocationの項目を追加する
 
    `"C:\Users\Public\Documents\GitHub\web_assembly_sample\samples\threejs\"`内にあるhtmlファイルを参照したい場合
 

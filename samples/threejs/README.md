@@ -339,7 +339,7 @@ function tick() {
 
 ## ヒットした面の色を変える
 
-BufferGeometryなら3つの頂点をすべて色変更する
+BufferGeometry型ならnon indexタイプで3つの頂点をすべて色変更する
 
 一括で色をリセットする機能はないようなので、色を戻したい場合は、色を変える度に前の選択の色だけ元に戻すアプローチが現実的
 
@@ -360,6 +360,11 @@ if (intersects.length > 0) {
     geometry.attributes.color.needsUpdate = true;
 }
 ```
+
+Geometry型なら面単位で選択が可能
+
+- [javascript - How to change face color in Three.js - Stack Overflow](https://stackoverflow.com/questions/11252592/how-to-change-face-color-in-three-js/44767066)
+- [three.js マウスクリックで一部の面の色を変える - Qiita](https://qiita.com/Arihi/items/62c612450f0219bf8225)
 
 
 
@@ -598,6 +603,39 @@ geometry.computeVertexNormals();
 
 var mesh = new THREE.Mesh(geometry, material);
 scene.add(mesh);
+```
+
+### 色情報の更新
+
+[source](geometry_update_col.html)
+
+```javascript
+geometry = new THREE.Geometry();
+geometry.vertices.push(
+    new THREE.Vector3(-1, -1, 1),
+    new THREE.Vector3(1, -1, 1),
+    new THREE.Vector3(1, 1, 1),
+    new THREE.Vector3(-1, 1, 1),
+);
+geometry.faces.push(
+    new THREE.Face3(0, 1, 2, color=new THREE.Color(0xff0000)),
+    new THREE.Face3(2, 3, 0, color=new THREE.Color(0x00ff00)),
+);
+geometry.faces[1].color.setRGB(1,0,0);
+
+var material = new THREE.MeshBasicMaterial({
+    vertexColors: true,
+    // vertexColors: THREE.FaceColors,
+});
+var mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
+```
+
+```javascript
+function set_col() {
+    geometry.faces[0].color.setRGB(1,1,0);
+    geometry.colorsNeedUpdate = true;
+}
 ```
 
 
