@@ -2,8 +2,10 @@
 #include <emscripten/val.h>
 #include <string>
 #include <vector>
+#include <iostream>
 
 using namespace emscripten;
+using namespace std;
 
 void print_array(std::vector<int> &v){
 	for(auto a:v){
@@ -28,12 +30,16 @@ void print_jsarray_double(val v){
 	
 	// vector型への変換用関数
 	std::vector<double> vd = vecFromJSArray<double>(v);
+	cout << "vecFromJSArray" << endl;
+	for(auto && v:vd){
+		cout << v << endl;
+	}
 }
 
 EMSCRIPTEN_BINDINGS(module) {
-	function("print_array", &print_array);
-	function("print_vvarray", &print_vvarray);
-	function("print_jsarray_double", &print_jsarray_double);
+	emscripten::function("print_array", &print_array);
+	emscripten::function("print_vvarray", &print_vvarray);
+	emscripten::function("print_jsarray_double", &print_jsarray_double);
 	
 	register_vector<int>("VectorInt");
 	register_vector<std::vector<int>>("VVInt");

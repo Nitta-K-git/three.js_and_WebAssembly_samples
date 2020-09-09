@@ -19,9 +19,15 @@
       Module.print_array(v);
       Module.print_array(v2);
       Module.print_vvarray(vv);
+
+      // jsの配列をC++に直接渡す
+      var vertices = new Float32Array([1., 10, -23]); // Float型で渡す
+      Module.print_jsarray_double(vertices);
+      Module.print_jsarray_double(new Int32Array([1, 10, -23])); // Int型で渡す
+      Module.print_jsarray_double([1, 10, -23]); // リスト型で渡す
     }
   };
 </script>
-<script src="sample.js"></script>
+<script src="vector_from_js.js"></script>
 
 </html>

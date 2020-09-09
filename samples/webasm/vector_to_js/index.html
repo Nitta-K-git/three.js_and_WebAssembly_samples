@@ -41,9 +41,13 @@
 
       // reset the value at the given index position
       retMap.set(10, "OtherValue");
+
+      // get val from wasm as `val` type
+      v = Module.retVal();
+      console.log(v);
     }
   };
 </script>
-<script src="sample.js"></script>
+<script src="vector_to_js.js"></script>
 
 </html>
