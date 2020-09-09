@@ -1,0 +1,144 @@
+<html>
+
+<head>
+    <meta http-equiv="content-type" charset="utf-8">
+</head>
+
+<body>
+    <script src="cmake_meshlab_edit_data.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
+    <!-- <script src="js/loaders/OBJLoader.js"></script> -->
+    <script src="../js/loaders/PLYLoader.js"></script>
+    <script src="../js/controls/OrbitControls.js"></script>
+
+    <h2>3Dファイルの読み込み・表示・編集</h2>
+    <form>
+        <input type="file" id="inputfile" accept=".ply" />
+    </form>
+    <canvas id="myCanvas"></canvas>
+    <!-- 読み込んだデータをwasmに送るボタン -->
+    <input type="button" value="wasmへデータ転送" onclick="send_to_wasm()">
+    <!-- wasm側で処理を行うトリガー -->
+    <input type="button" value="wasmでデータ処理" onclick="trigger_process_wasm()">
+    <!-- wasmのデータをjavascript側に反映 -->
+    <input type="button" value="wasmのデータ読込" onclick="load_wasm_data()">
+
+    <script type="text/javascript">
+        var inputfile = document.getElementById('inputfile')
+        var scene;
+        var geometry;
+        var mesh;
+        var material;
+
+        // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
+        window.addEventListener('load', init);
+
+        function send_to_wasm() {
+            Module.set_js_array(geometry.attributes.position.array);
+        }
+        function trigger_process_wasm() {
+            Module.process_data();
+        }
+        function load_wasm_data() {
+            let geometry = new THREE.BufferGeometry();
+
+            v = Module.vector_to_js();
+            vf = new Float32Array(v["position"]);
+            indices = v["findex"]; // Int32Arrayだと動かない
+            // console.log(v);
+            // 頂点データを入れ替えて更新
+            // 入れ替え
+            // for (let i = 0; i * 3 < v.length; i++) {
+            //     geometry.attributes.position.setX(i, i * 3 + 0);
+            //     geometry.attributes.position.setY(i, i * 3 + 1);
+            //     geometry.attributes.position.setZ(i, i * 3 + 2);
+            // }
+            // 更新
+            geometry.setAttribute('position', new THREE.BufferAttribute(vf, 3));
+            geometry.setIndex(indices);
+            // geometry.computeFaceNormals();
+            let mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+        }
+
+        inputfile.addEventListener("change", function (e) {
+            var file = e.target.files;
+
+            var reader = new FileReader();
+            var arraybuf;
+            reader.readAsArrayBuffer(file[0]);
+
+            reader.onload = function () { // ファイルの読み込みが完了したら実行
+                arraybuf = reader.result;
+                console.log(arraybuf);
+
+                geometry = load_obj(arraybuf);
+                geometry = geometry.toNonIndexed();
+                add_geometry(geometry);
+            }
+        }, false);
+
+        function load_obj(arraybuf) {
+            var loader = new THREE.PLYLoader();
+            return loader.parse(arraybuf);
+        }
+
+        function add_geometry(geometry) {
+            // material = new THREE.MeshBasicMaterial({
+            //     color: 0x66FF00
+            // });
+
+            mesh = new THREE.Mesh(geometry, material);
+            mesh.name = "def";
+            scene.remove(scene.getObjectByName("def"));
+            scene.add(mesh);
+        }
+
+        function init() {
+            const width = 960;
+            const height = 540;
+
+            const renderer = new THREE.WebGLRenderer({
+                canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+            document.body.appendChild(renderer.domElement);
+
+            // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
+            scene = new THREE.Scene();
+
+            //light
+            var light = new THREE.HemisphereLight();
+            scene.add(light);
+
+            // camera
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            camera.position.set(0, 0, +5);
+
+            // カメラコントローラーを作成
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+            // geometry
+            geometry = new THREE.BufferGeometry();
+            geometry.fromGeometry(new THREE.BoxGeometry(1, 1, 1.5));
+            geometry = geometry.toNonIndexed();
+            material = new THREE.MeshBasicMaterial({
+                color: 0x6699FF
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.name = "def";
+            scene.add(mesh);
+
+            tick();
+
+            function tick() {
+                requestAnimationFrame(tick);
+                renderer.render(scene, camera);
+            }
+        }
+
+    </script>
+</body>
+
+</html>
