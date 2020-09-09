@@ -18,8 +18,9 @@ add_definitions(-DMESHLAB_SCALAR=float) # you should add this definition if you 
 file(TO_CMAKE_PATH $ENV{EMSDK_DIR} EMSDK_DIR)
 
 # set output file directory
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${NGINX_LOC_DIR}/html/${PROJECT_NAME})
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${NGINX_LOC_DIR}/html/${PROJECT_NAME})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Add Executable
 add_executable(${PROJECT_NAME})
@@ -39,26 +40,4 @@ target_sources(${PROJECT_NAME}
 
 if (EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "--bind")
-
-    # if defined NGINX_LOC_DIR, copy output files to NGINX_LOC_DIR
-    if(DEFINED ENV{NGINX_LOC_DIR})
-        file(TO_CMAKE_PATH $ENV{NGINX_LOC_DIR} NGINX_LOC_DIR)
-        
-        # make output directory for nginx
-        file(MAKE_DIRECTORY ${NGINX_LOC_DIR}/${PROJECT_NAME})
-
-        # copy neccesarry files to nginx directory after building
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-            ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.js
-            ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.wasm
-            ${NGINX_LOC_DIR}/${PROJECT_NAME}
-        )
-        # html file is not related with building, so use file command
-        file(COPY
-            index.html
-            DESTINATION
-            ${NGINX_LOC_DIR}/${PROJECT_NAME}
-        )
-    endif()
 endif()
