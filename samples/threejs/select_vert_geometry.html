@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
+    <script src="../../../three.js/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        window.addEventListener('load', init);
+
+        var mesh, pcd;
+        var geometry;
+        var select_vert_id = -1;
+
+        function init() {
+            const width = 960;
+            const height = 540;
+
+            // マウス座標管理用のベクトルを作成
+            const mouse = new THREE.Vector2();
+            // canvas 要素の参照を取得する
+            const canvas = document.querySelector('#myCanvas');
+
+            // レンダラーを作成
+            const renderer = new THREE.WebGLRenderer({
+                canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+            document.body.appendChild(renderer.domElement);
+
+            // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
+            const scene = new THREE.Scene();
+
+            //light
+            var light = new THREE.HemisphereLight();
+            scene.add(light);
+
+            // カメラを作成
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            camera.position.set(0, 0, +10);
+
+            // カメラコントローラーを作成
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+            geometry = new THREE.Geometry();
+            geometry.vertices.push(
+                new THREE.Vector3(-1, -1, +1),
+                new THREE.Vector3(+1, -1, +1),
+                new THREE.Vector3(+1, +1, +1),
+                new THREE.Vector3(-1, +1, +1),
+            );
+            geometry.colors.push(
+                new THREE.Color(0x00ffff),
+                new THREE.Color(0x00ffff),
+                new THREE.Color(0x00ffff),
+                new THREE.Color(0x00ffff),
+            );
+
+            var material = new THREE.PointsMaterial({
+                size: 0.10,
+                vertexColors: true,
+            });
+
+            pcd = new THREE.Points(geometry, material);
+
+            scene.add(pcd);
+
+            // レイキャストを作成
+            const raycaster = new THREE.Raycaster();
+            raycaster.params.Points.threshold = 0.1; // 点の当たり判定閾値(def:1)
+
+            canvas.addEventListener('mousedown', handleMouseDown, false);
+
+            function handleMouseDown(event) {
+                if (event.button == 0) { // click left button
+                    const element = event.currentTarget;
+                    mouse.x = ((event.clientX - element.offsetLeft) / element.offsetWidth) * 2 - 1;
+                    mouse.y = -((event.clientY - element.offsetTop) / element.offsetHeight) * 2 + 1;
+
+                    raycaster.setFromCamera(mouse, camera);
+                    const intersects = raycaster.intersectObject(pcd);
+                    if (intersects.length > 0) {
+                        var intersect = intersects[0];
+                        let vi = intersect.index;
+                        // console.log(intersect.point, intersect.index, intersect.object);
+                        console.log(vi);
+                        if (select_vert_id != vi) {
+                            if (select_vert_id >= 0) {
+                                geometry.colors[select_vert_id].setRGB(0,1,1);
+                            }
+                            geometry.colors[vi].setRGB(1,0,0);
+                            geometry.colorsNeedUpdate = true;
+                            select_vert_id = vi;
+                        }
+                    }
+                }
+            }
+
+            tick();
+            function tick() {
+                requestAnimationFrame(tick); // セットした関数を毎フレーム呼び出す，関数内に書かないとループしない
+                renderer.render(scene, camera); // レンダリング，画面更新は明示的に書く
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <canvas id="myCanvas"></canvas>
+</body>
+
+</html>
