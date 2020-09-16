@@ -45,6 +45,7 @@ void set_js_array(val v){
 //	}
 	// load as CMeshO
 	vector<Point3m> coordVec;
+	vector<Point3i> indexVec;
 	
 	for(unsigned int i=0; i*3<vd.size(); ++i){
 		coordVec.push_back(Point3m(vd[i*3+0], vd[i*3+1], vd[i*3+2]));
