@@ -41,18 +41,22 @@
 
             //create a triangular geometry
             var geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3(-50, -50, 0));
-            geometry.vertices.push(new THREE.Vector3(50, -50, 0));
-            geometry.vertices.push(new THREE.Vector3(50, 50, 0));
-            geometry.vertices.push(new THREE.Vector3(-50, 50, 0));
-
+            geometry.vertices.push(
+                new THREE.Vector3(-50, -50, 0),
+                new THREE.Vector3(50, -50, 0),
+                new THREE.Vector3(50, 50, 0),
+                new THREE.Vector3(-50, 50, 0),
+            );
             //create a new face using vertices 0, 1, 2
             var color = new THREE.Color(0xffaa00); //optional
             var face = new THREE.Face3(0, 1, 2, color=color);
-
             //add the face to the geometry's faces array
-            geometry.faces.push(face);
-            geometry.faces.push(new THREE.Face3(1, 2, 3, color=new THREE.Color(0x0000ff)));
+            geometry.faces.push(
+                face,
+                new THREE.Face3(1, 2, 3, color=new THREE.Color(0x0000ff)),
+            );
+            // set face color
+            geometry.faces[1].color.setRGB(1,0,0);
 
             //the face normals and vertex normals can be calculated automatically if not supplied above
             geometry.computeFaceNormals();
