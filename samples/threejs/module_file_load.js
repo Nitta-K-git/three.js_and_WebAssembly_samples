@@ -1,9 +1,9 @@
-import * as THREE from '../js/build/three.module.js';
-import { OrbitControls } from '../js/modules/jsm/controls/OrbitControls.js';
-import { PLYLoader } from '../js/modules/jsm/loaders/PLYLoader.js';
+import * as THREE from '../../../three.js/build/three.module.js';
+import { OrbitControls } from '../../../three.js/examples/jsm/controls/OrbitControls.js';
+import { PLYLoader } from '../../../three.js/examples/jsm/loaders/PLYLoader.js';
 
 const canvas = document.querySelector('#myCanvas');
-const sprite = new THREE.TextureLoader().load('../js/modules/textures/sprites/disc.png');
+const sprite = new THREE.TextureLoader().load('../../../three.js/examples/textures/sprites/disc.png');
 
 const points_threshold = 0.1; // 点の当たり判定閾値
 const mesh_name = "mesh";
