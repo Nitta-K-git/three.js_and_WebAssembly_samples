@@ -29,10 +29,21 @@
         // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
         window.addEventListener('load', init);
 
-        function send_to_wasm(){
-            Module.set_js_array(geometry.attributes.position.array);
+        function send_to_wasm() {
+            // Module.set_js_array(geometry.attributes.position.array);
+            v = {};
+            // create_mesh_from_BufferGeometry
+            // v["vertices"] = geometry.attributes.position.array;
+            // v["faces"] = geometry.getIndex().array;
+            // Module.create_mesh_from_BufferGeometry(v);
+
+            // create_mesh_from_Geometry
+            v["vertices"] = geometry.vertices;
+            v["faces"] = geometry.faces;
+            Module.create_mesh_from_Geometry(v);
+
         }
-        function trigger_process_wasm(){
+        function trigger_process_wasm() {
             Module.print_data();
         }
 
@@ -94,8 +105,15 @@
             const controls = new THREE.OrbitControls(camera, renderer.domElement);
 
             // geometry
-            geometry = new THREE.BufferGeometry();
-            geometry.fromGeometry(new THREE.BoxGeometry(1, 1, 1.5));
+            geometry = new THREE.Geometry();
+            bufgeometry = new THREE.BufferGeometry();
+            var vertices = new Float32Array([-1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0,]);
+            var indices = [];
+            indices.push(0, 1, 2, 2, 3, 0,);
+            bufgeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            bufgeometry.setIndex(indices);
+
+            geometry.fromBufferGeometry(bufgeometry);
             const material = new THREE.MeshBasicMaterial({
                 color: 0x6699FF
             });
