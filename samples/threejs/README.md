@@ -146,7 +146,7 @@ html単体をchrome上で実行する場合は[参考元](https://github.com/ics
 </html>
 ```
 
-# raycast (objects)
+# raycast 
 
 ## basic
 
@@ -366,9 +366,181 @@ Geometry型なら面単位で選択が可能
 - [javascript - How to change face color in Three.js - Stack Overflow](https://stackoverflow.com/questions/11252592/how-to-change-face-color-in-three-js/44767066)
 - [three.js マウスクリックで一部の面の色を変える - Qiita](https://qiita.com/Arihi/items/62c612450f0219bf8225)
 
+## 面の選択
+
+[source (geometry version)](select_face_geometry.html)
+
+- [raycasterでクリックイベントの実現 - Qiita](https://qiita.com/mo49/items/c8ca223fb90a8053f902)
+
+マウスのボタンダウンでraycastによる判定を行う
+
+BufferGeometryだとPLY方式のデータで面単位で色を付ける機能がないため、実装してない
+
+```javascript
+canvas.addEventListener('mousedown', handleMouseDown, false);
+function handleMouseDown(event) {
+    if (event.button == 0) { // click left button
+        const element = event.currentTarget;
+        mouse.x = ((event.clientX - element.offsetLeft) / element.offsetWidth) * 2 - 1;
+        mouse.y = -((event.clientY - element.offsetTop) / element.offsetHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(mesh);
+        if (intersects.length > 0) {
+            var intersect = intersects[0];
+            var face = intersect.face;
+            var fi = intersect.faceIndex;
+            console.log(fi);
+            if (select_face_id != fi) {
+                if (select_face_id >= 0) {
+                    geometry.faces[select_face_id].color.setRGB(1, 1, 1);
+                }
+                geometry.faces[fi].color.setRGB(1, 0, 0);
+                geometry.colorsNeedUpdate = true;
+                select_face_id = fi;
+            }
+        }
+    }
+}
+```
 
 
-# raycast (object)
+
+## 頂点の選択
+
+[source (Geometry version)](select_vert_geometry.html)
+
+[source (BufferGeometry version)](select_vert_bufgeometry.html)
+
+頂点のみ選択をしたい場合は、raycastに点群だけのデータ(`THEREE.Points`)を作って渡す
+
+点群も選択された頂点のインデックスとオブジェクトが取得できるので、面と同じように扱うことができる
+
+GeometryでもBufferGeometryでも同じように処理できる
+
+```javascript
+// BufferGeometry
+geometry = new THREE.BufferGeometry();
+var vertices = new Float32Array([
+    -1, -1, +1,
+    +1, -1, +1,
+    +1, +1, +1,
+    -1, +1, +1,
+]);
+var colors = new Float32Array([
+    0, 1, 1,
+    0, 1, 1,
+    0, 1, 1,
+    0, 1, 1,
+]);
+geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+geometry.computeBoundingBox();
+
+var material = new THREE.PointsMaterial({
+    size: 0.10, // 点群のサイズ設定
+    vertexColors: true,
+});
+
+pcd = new THREE.Points(geometry, material);
+scene.add(pcd);
+
+// レイキャストを作成
+const raycaster = new THREE.Raycaster();
+raycaster.params.Points.threshold = 0.1; // 点の当たり判定閾値(def:1)
+
+canvas.addEventListener('mousedown', handleMouseDown, false);
+
+function handleMouseDown(event) {
+    if (event.button == 0) { // click left button
+        const element = event.currentTarget;
+        mouse.x = ((event.clientX - element.offsetLeft) / element.offsetWidth) * 2 - 1;
+        mouse.y = -((event.clientY - element.offsetTop) / element.offsetHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(pcd);
+        if (intersects.length > 0) {
+            var intersect = intersects[0];
+            let vi = intersect.index;
+            // console.log(intersect.point, intersect.index, intersect.object);
+            console.log(vi);
+            if (select_vert_id != vi) {
+                if (select_vert_id >= 0) {
+                    geometry.attributes.color.setXYZ(select_vert_id, 0, 1, 1);
+                }
+                geometry.attributes.color.setXYZ(vi, 1, 0, 0);
+                geometry.attributes.color.needsUpdate = true;
+                select_vert_id = vi;
+            }
+        }
+    }
+}
+```
+
+```javascript
+// geometry
+geometry = new THREE.Geometry();
+geometry.vertices.push(
+    new THREE.Vector3(-1, -1, +1),
+    new THREE.Vector3(+1, -1, +1),
+    new THREE.Vector3(+1, +1, +1),
+    new THREE.Vector3(-1, +1, +1),
+);
+geometry.colors.push(
+    new THREE.Color(0x00ffff),
+    new THREE.Color(0x00ffff),
+    new THREE.Color(0x00ffff),
+    new THREE.Color(0x00ffff),
+);
+
+var material = new THREE.PointsMaterial({
+    size: 0.10,
+    vertexColors: true,
+});
+
+pcd = new THREE.Points(geometry, material);
+
+scene.add(pcd);
+
+// レイキャストを作成
+const raycaster = new THREE.Raycaster();
+raycaster.params.Points.threshold = 0.1; // 点の当たり判定閾値(def:1)
+
+canvas.addEventListener('mousedown', handleMouseDown, false);
+
+function handleMouseDown(event) {
+    if (event.button == 0) { // click left button
+        const element = event.currentTarget;
+        mouse.x = ((event.clientX - element.offsetLeft) / element.offsetWidth) * 2 - 1;
+        mouse.y = -((event.clientY - element.offsetTop) / element.offsetHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(pcd);
+        if (intersects.length > 0) {
+            var intersect = intersects[0];
+            let vi = intersect.index;
+            // console.log(intersect.point, intersect.index, intersect.object);
+            console.log(vi);
+            if (select_vert_id != vi) {
+                if (select_vert_id >= 0) {
+                    geometry.colors[select_vert_id].setRGB(0,1,1);
+                }
+                geometry.colors[vi].setRGB(1,0,0);
+                geometry.colorsNeedUpdate = true;
+                select_vert_id = vi;
+            }
+        }
+    }
+}
+```
+
+
+
+
+
+
+
+## raycast (object単体)
 
 [source](raycast_object.html)
 
@@ -564,13 +736,58 @@ function save(blob, filename) {
 
 # Material
 
-## texture
+## 点群を円形の形状で表示する
+
+- https://threejs.org/examples/#webgl_points_billboards
+
+
 
 
 
 # Geometry
 
-## Create Geometry data on the fly
+## Basic usage
+
+- [[Three.js] BufferGeometry vs Geometry - Qiita](https://qiita.com/masato_makino/items/2ad5b1eb01a118d0a155)
+- [three.jsのGeometryからBufferGeometryへの書き換えで躓いたところ - Qiita](https://qiita.com/izumi_ikezaki/items/9c43901c9b8f67423f49)
+
+  - インスタンス生成
+  - 頂点の座標を動かす
+  - 頂点の座標変化を更新する
+  - 法線情報の更新
+  - 頂点数
+  - 形式の相互変換
+  - パフォーマンスの違い
+
+## Convert between BufferGeometry and Geometry
+
+[source](bufgeo_to_geo.html)
+
+- [[Three.js] BufferGeometry vs Geometry - Qiita](https://qiita.com/masato_makino/items/2ad5b1eb01a118d0a155)
+  - 二つの形式でパフォーマンスに差が出るのは頂点データの書き換えと生成時のみ。描画時は数万ポリゴンのオーダーなら差はない
+
+- Geometry → BufferGeometry への変換では面の情報はなくなる(強制的にSTL形式になる)
+- BufferGeometry → Geometry の変換では面のindexは必ず付加される(元がSTL形式の場合はそのまま連番でつけられる、PLY形式の場合はそのまま)
+
+```javascript
+var bufgeo = new THREE.BufferGeometry();
+var geo = new THREE.Geometry();
+
+bufgeo.fromGeometry(geo); // bufgeoにgeoの中身が読み込まれる
+geo.fromBufferGeometry(bufgeo);
+```
+
+
+
+## Geometry
+
+### data structure
+
+```javascript
+geometry.vertices[i].setX(posX);
+```
+
+### Create Geometry data on the fly
 
 [source](geometry.html)
 
@@ -642,7 +859,17 @@ function set_col() {
 
 
 
-## Create BufferGeometry data on the fly
+## BufferGeometry
+
+### data structure
+
+```javascript
+geometry.attributes.position.setX(i, posX);
+```
+
+
+
+### Create BufferGeometry data on the fly
 
 - https://threejs.org/docs/#api/en/core/BufferGeometry
 
@@ -654,7 +881,7 @@ function set_col() {
   - 渡す配列は参照渡し
   - `Float32Array`とかの型付き配列でないと渡せない
 
-### 頂点だけで面を指定(STL方式)
+#### 頂点だけで面を指定(STL方式)
 
 [source](buffergeometry_vert_only.html)
 
@@ -699,7 +926,7 @@ var mesh = new THREE.Mesh(geometry, material);
 scene.add(mesh);
 ```
 
-### 面を頂点インデックスで指定(PLY方式)
+#### 面を頂点インデックスで指定(PLY方式)
 
 [source](buffergeometry_face_index.html)
 
@@ -908,5 +1135,66 @@ console.log(xx.toString(16));	// ffff
 </script>
 ```
 
+## 配列の初期化
 
+- [JavaScriptの配列初期化 - Qiita](https://qiita.com/yuta-ike/items/f60b940540a89332df2a)
+- [JavaScriptで[ 0, 1, 2, 3, 4 ]のような連番の配列を生成する方法 - Qiita](https://qiita.com/suin/items/1b39ce57dd660f12f34b)
+
+```javascript
+// 任意のオブジェクトで初期化できる
+a = Array(5).fill(0) //[0, 0, 0, 0, 0]
+b = new Array(5).fill(0) //これも可
+c = Array(5).fill(new Hoge()); // Hogeオブジェクトは一つだけ作られて、すべての配列が同じオブジェクト参照するので注意
+d = [...Array(5)].map((_, i) => new Hoge()); // これなら各配列に異なるオブジェクトが入る
+```
+
+
+
+## 配列のconcat
+
+- [Javascriptで配列をマージする - Qiita](https://qiita.com/bitarx/items/259f3a397fd2af23477a)
+
+```javascript
+let array_base = ['blue', 'green', 'yellow'];
+let array_add = ['red', 'white'];
+let result_concat = array_base.concat(array_add);
+console.log(result_concat);
+```
+
+# モジュール化
+
+- [JavaScript モジュール - JavaScript | MDN](https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Modules) : 使い方はこれだけ読んどけばOK
+- [JavaScriptにおけるモジュール機構や、モジュールバンドラーについて | 楽しいだけで十分です](https://yinm.info/20200411/)
+- [モジュールバンドラーはなぜモダンなフロントエンドの開発に必要なのか？｜Kosukeee｜note](https://note.com/billion_dollars/n/n596fecfdeb2e)
+- [【JavaScript】 export/importでモジュール化とファイル分割する方法](https://affi-sapo-sv.com/note/js-module.php)
+
+## 概要
+
+- JavaScriptで作った関数などをファイル内でexportすれば他のJavaScriptファイルからimportして使える
+- importは関数名そのままでもasで任意の名前にも変えられるし、`モジュール名.関数名`みたいに使うことも可能
+- 複数モジュールをまとめるだけのファイルも作れる→このファイルをimportすると一括でimportできる
+- モジュール内のexportは一括でimportできる。exportは逐次指定
+- htmlで読み込むときは`<script type="module" src="main.mjs"></script>`のようにmodule指定が必要
+
+## 注意点
+
+- nginxでは読み込むURLの起点より上のディレクトリのモジュールは読めない
+
+  ```json
+  # "C:\Users\Public\Documents\GitHub\web_assembly_sample\samples\webasm\"内にあるhtmlファイルを参照したい場合
+  # samples内にあるwebasmと同じ階層のディレクトリやそのさらに上は読めない
+  location /webasm/ {
+  	root    C:\\Users\\Public\\Documents\\GitHub\\web_assembly_sample\\samples;
+  }
+  # samples/js以下ののモジュールを読み込む場合はlocationをここまでで止めておく
+  location /samples/ {
+      root    C:\\Users\\Public\\Documents\\GitHub\\web_assembly_sample;
+  }
+  ```
+
+- HTMLに直書きする場合は上の条件を満たしていても親ディレクトリのモジュールは読めない
+
+
+
+## three.jsをモジュールとしてimport
 

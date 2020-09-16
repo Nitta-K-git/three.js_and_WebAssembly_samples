@@ -8,7 +8,7 @@
 
 ## three.js
 
-You can download the library from [github](https://github.com/mrdoob/three.js/tree/dev/examples)
+You can download the library from [github](https://github.com/mrdoob/three.js/tree/dev/examples) to local (e.g. C:/Users/Public/Documents/GitHub).
 
 ## WebAssembly
 
@@ -62,19 +62,28 @@ nginxからgithub上のhtmlファイルを直接参照できるように設定�
 
 2. http → server内のlocationの項目を追加する
 
-   `"C:\Users\Public\Documents\GitHub\web_assembly_sample\samples\threejs\"`内にあるhtmlファイルを参照したい場合
-
-   ```
+   ```json
+   # "C:\Users\Public\Documents\GitHub\web_assembly_sample\samples\threejs\"内にあるhtmlファイルを参照したい場合
    location /threejs/ {
        root    C:\\Users\\Public\\Documents\\GitHub\\web_assembly_sample\\samples;
    }
+   # "C:\Users\Public\Documents\GitHub\web_assembly_sample\samples\webasm\"内にあるhtmlファイルを参照したい場合
+   location /webasm/ {
+   	root    C:\\Users\\Public\\Documents\\GitHub\\web_assembly_sample\\samples;
+   }
+   # You have to use this location, if you use GitHub/three.js repository libraries
+   location /GitHub/ {
+       root    C:\\Users\\Public\\Documents;
+   }
    ```
-
-   のように追加
 
 3. `localhost/threejs/index.html`のようにファイルにアクセスできる
 
    `/threejs`が来ると自動的に設定したrootパスが付加される仕組み
+
+   ※ モジュールをimportする場合、locationより上のディレクトリのファイルは読めないので注意
+
+   ※ HTML内にscriptを直接記述する場合はモジュールで親ディレクトリ読むことはできない(同じディレクトリのモジュールを呼び出して、その中で親ディレクトリからimportする)
 
 4. `nginx.exe -s reload` で設定をリロード
 
@@ -86,23 +95,22 @@ nginxからgithub上のhtmlファイルを直接参照できるように設定�
 - IDEで自動補完を使えるようにする : [CODE](./samples/webasm/cmake_with_Qt)
 - C++のVectorデータをjs側に渡す : [CODE](./samples/webasm/vector_to_js)
 - jsのデータをC++側に渡す : [CODE](./samples/webasm/vector_from_js)
+- jsの変数を直接C++で使う(`emscripten::val`型) : [CODE](samples/webasm/cmake_meshlab_load_file)
 
 ## Use with MeshLab library
 
 - template with MeshLab : [CODE](./samples/webasm/cmake_meshlab)
-- load file in three.js and pass data to MeshLab : [CODE]
-- read mesh data from MeshLab : [CODE]
+- load file in three.js and pass data to MeshLab : [CODE](samples/webasm/cmake_meshlab_load_file)
+- read mesh data from MeshLab : [CODE](samples/webasm/cmake_meshlab_send_data)
 - call functions of MeshLab : [CODE]
 
 # three.js sample codes
 
-Summarize of samples is [here](./samples/threejs)
+Basic usage are [here](./samples/threejs).
 
-- template : [CODE](./samples/threejs/template.html)
-- define mesh on the fly : [CODE](./samples/threejs/geometry.html)
-- picking object(raycast) : [CODE](./samples/threejs/raycast.html)
-- picking face : [CODE]
-- picking vertex : [CODE]
+Demo are [here](samples/threejs_demo).
+
+
 
 
 
