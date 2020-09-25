@@ -1,0 +1,33 @@
+<!doctype html>
+
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>WASM instantiateStreaming() test</title>
+</head>
+
+<body>
+  <script type="module">
+    // var importObject = { imports: { hello: arg => console.log(arg) } };
+
+    // // WebAssembly.instantiateStreaming(fetch('cmake_meshlab_edit_data.wasm'), importObject)
+    // //   .then(obj => obj.instance.exports.hello());
+
+    // // WebAssembly.compileStreaming(fetch('cmake_meshlab_edit_data.wasm'))
+    // //   .then(module => WebAssembly.instantiate(module, importObject))
+    // //   .then(instance => instance.exports.hello());
+
+    // WebAssembly.instantiateStreaming(fetch('cmake_meshlab_edit_data.wasm'), importObject)
+    //   .then(obj => {
+    //     // Call an exported function:
+    //     obj.instance.exports.hello();
+    //   })
+
+    import Module from "./cmake_meshlab_edit_data.js";
+
+    console.log("hoeghoge");
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>modularize</title>
+</head>
+
+<body>
+  <script src="modularize.js"></script>
+  <script type="text/javascript">
+    Module.hello();
+  </script>
+
+  <!-- <script>
+    fetch('modularize.wasm')
+      .then(response => response.arrayBuffer())
+      .then(buffer => new Uint8Array(buffer))
+      .then(binary => {
+        var moduleArgs = {
+          wasmBinary: binary,
+          onRuntimeInitialized: function () {
+            console.log('on runtime initialized');
+          }
+        };
+        var module = Module(moduleArgs);
+      });
+  </script> -->
+</body>
+
+</html>

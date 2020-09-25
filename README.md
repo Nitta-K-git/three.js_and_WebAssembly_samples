@@ -96,6 +96,7 @@ nginxからgithub上のhtmlファイルを直接参照できるように設定�
 - C++のVectorデータをjs側に渡す : [CODE](./samples/webasm/vector_to_js)
 - jsのデータをC++側に渡す : [CODE](./samples/webasm/vector_from_js)
 - jsの変数を直接C++で使う(`emscripten::val`型) : [CODE](samples/webasm/cmake_meshlab_load_file)
+- `<script type="module">`でimportする : [CODE]
 
 ## Use with MeshLab library
 
@@ -106,9 +107,7 @@ nginxからgithub上のhtmlファイルを直接参照できるように設定�
 
 # three.js sample codes
 
-Basic usage are [here](./samples/threejs).
-
-Demo are [here](samples/threejs_demo).
+Basic usages are [here](./samples/threejs).
 
 
 

@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<script>
+  Module = {
+    onRuntimeInitialized: function () {
+      init();
+    }
+  };
+  
+  function init() {
+    Module.hello();
+    console.log("add : " + Module.add(1, 2));
+  }
+</script>
+<script src="tutorial.js"></script>
+
+</html>

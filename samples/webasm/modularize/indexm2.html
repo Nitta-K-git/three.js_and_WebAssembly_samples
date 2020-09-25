@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>modularize</title>
+</head>
+
+<body>
+  <script src="modularize.js" type="module"></script>
+  <script>
+    Module = {
+      onRuntimeInitialized: function () {
+        init();
+      }
+    };
+
+    function init() {
+      Module.hello();
+      console.log("add : " + Module.add(1, 2));
+    }
+
+  </script>
+  <!-- <script type="module">
+    let module;
+    fetch('modularize.wasm')
+      .then(response => response.arrayBuffer())
+      .then(buffer => new Uint8Array(buffer))
+      .then(binary => {
+        var moduleArgs = {
+          wasmBinary: binary,
+          onRuntimeInitialized: function () {
+            console.log('on runtime initialized');
+            var add = module.cwrap('add', 'number', ['number', 'number']);
+            console.log(add(2, 3));
+          }
+        };
+        module = Module(moduleArgs);
+        // module.hello();
+      });
+  </script> -->
+</body>
+
+</html>

@@ -5,11 +5,11 @@
 </head>
 
 <body>
-    <script src="cmake_meshlab_edit_data.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
+    <!-- <script src="cmake_meshlab_edit_data.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script> -->
     <!-- <script src="js/loaders/OBJLoader.js"></script> -->
-    <script src="../js/loaders/PLYLoader.js"></script>
-    <script src="../js/controls/OrbitControls.js"></script>
+    <!-- <script src="../../js/loaders/PLYLoader.js"></script> -->
+    <!-- <script src="../js/controls/OrbitControls.js"></script> -->
 
     <h2>3Dファイルの読み込み・表示・編集</h2>
     <form>
@@ -17,24 +17,59 @@
     </form>
     <canvas id="myCanvas"></canvas>
     <!-- 読み込んだデータをwasmに送るボタン -->
-    <input type="button" value="wasmへデータ転送" onclick="send_to_wasm()">
+    <input type="button" value="wasmへデータ転送" id="send_to_wasm">
     <!-- wasm側で処理を行うトリガー -->
     <input type="button" value="wasmでデータ処理" onclick="trigger_process_wasm()">
     <!-- wasmのデータをjavascript側に反映 -->
     <input type="button" value="wasmのデータ読込" onclick="load_wasm_data()">
 
-    <script type="text/javascript">
+    <!-- <script type="text/javascript"> -->
+    <script type="module">
+        import * as THREE from '../../../../three.js/build/three.module.js';
+        import { OrbitControls } from '../../../../three.js/examples/jsm/controls/OrbitControls.js';
+        import { PLYLoader } from '../../../../three.js/examples/jsm/loaders/PLYLoader.js';
+        // wasmをモジュールとしてimportする機能はまだない？ https://developer.mozilla.org/ja/docs/WebAssembly/Loading_and_running
+        // import { Meshlab } from "./cmake_meshlab_edit_data.js";
+
         var inputfile = document.getElementById('inputfile')
         var scene;
         var geometry;
         var mesh;
         var material;
 
+        // WebAssembly.compileStreaming(fetch('cmake_meshlab_edit_data.wasm'))
+        //     .then(function (mod) {
+        //         var imports = WebAssembly.Module.imports(mod);
+        //         console.log(imports);
+        //     });
+
+        // let importObject = { imports: { imported_func: arg => console.log(arg) } };
+        // WebAssembly.instantiateStreaming(fetch('cmake_meshlab_edit_data.wasm'), importObject)
+        //     .then(results => {
+        //         // Do something with the results!
+        //         console.log("hogehoge");
+        //     });
+
+        var importObject = { imports: { imported_func: arg => console.log(arg) } };
+        WebAssembly.instantiateStreaming(fetch('cmake_meshlab_edit_data.wasm'), importObject)
+            .then(
+                obj => obj.instance.exports.hello()
+                // obj => console.log(obj.instance)
+            );
+
         // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
         window.addEventListener('load', init);
 
+        // moduleだとinputタグでonclickで呼べない。addEventListenerを使う
+        // document.getElementById('#send_to_wasm').addEventListener('click', send_to_wasm);
+        // document.querySelector('#send_to_wasm').addEventListener('click', functest);
+        document.querySelector('#send_to_wasm').addEventListener('click', send_to_wasm);
+
+        function functest() {
+            console.log("hoge");
+        }
         function send_to_wasm() {
-            Module.set_js_array(geometry.attributes.position.array);
+            Module.js_to_asm(geometry.attributes.position.array);
         }
         function trigger_process_wasm() {
             Module.process_data();
@@ -42,9 +77,13 @@
         function load_wasm_data() {
             let geometry = new THREE.BufferGeometry();
 
-            v = Module.vector_to_js();
+            v = Module.asm_to_js();
             vf = new Float32Array(v["position"]);
             indices = v["findex"]; // Int32Arrayだと動かない
+            if (v.color) {
+                colors = new Float32Array(v["color"]);
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            }
             // console.log(v);
             // 頂点データを入れ替えて更新
             // 入れ替え
@@ -73,13 +112,13 @@
                 console.log(arraybuf);
 
                 geometry = load_obj(arraybuf);
-                geometry = geometry.toNonIndexed();
+                // geometry = geometry.toNonIndexed(); // STLのようなインデックス使わない形式に変換
                 add_geometry(geometry);
             }
         }, false);
 
         function load_obj(arraybuf) {
-            var loader = new THREE.PLYLoader();
+            var loader = new PLYLoader();
             return loader.parse(arraybuf);
         }
 
@@ -117,12 +156,12 @@
             camera.position.set(0, 0, +5);
 
             // カメラコントローラーを作成
-            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            const controls = new OrbitControls(camera, renderer.domElement);
 
             // geometry
             geometry = new THREE.BufferGeometry();
             geometry.fromGeometry(new THREE.BoxGeometry(1, 1, 1.5));
-            geometry = geometry.toNonIndexed();
+            // geometry = geometry.toNonIndexed();
             material = new THREE.MeshBasicMaterial({
                 color: 0x6699FF
             });
