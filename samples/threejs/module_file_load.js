@@ -5,7 +5,7 @@ import { PLYLoader } from '../../../three.js/examples/jsm/loaders/PLYLoader.js';
 const canvas = document.querySelector('#myCanvas');
 const sprite = new THREE.TextureLoader().load('../../../three.js/examples/textures/sprites/disc.png');
 
-const points_threshold = 0.1; // 点の当たり判定閾値
+const points_threshold = 0.01; // 点の当たり判定閾値 ピクセル値ではなく3D空間内の距離なので近づくとピクセルの閾値は大きくなる
 const mesh_name = "mesh";
 const pcd_name = "pcd";
 const selected_vert_col = 0xff0000;

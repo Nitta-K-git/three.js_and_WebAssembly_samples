@@ -554,6 +554,22 @@ const intersects = raycaster.intersectObject(mesh);
 
 
 
+# 範囲選択
+
+[source]
+
+- [Three.js selectionBoxを使ってみた - Qiita](https://qiita.com/tftf_w/items/ebac78ddd0ed998d2e9d)
+- [Three.jsのSelectionBoxをOrthographicCameraで使いたい – しすこん](http://systemconcept.co.jp/blog/?p=1358)
+- https://threejs.org/examples/#misc_boxselection
+  - 公式のサンプルは矩形内にオブジェクトの中心が入っているかだけで判定している
+  - モジュールとして実装されている`SelectionBox.js`がそもそもオブジェクトの中心しか判定しない仕様になっている
+  - `SelectionBox.js`は[Frustum](https://threejs.org/docs/index.html#api/en/math/Frustum)を使っている
+  - このサンプルをほぼそのまま使用する
+
+
+
+
+
 # ファイルの読み込み
 
 ## テキストファイル
@@ -696,7 +712,8 @@ function load_obj(arraybuf) { // 引数はテキストデータ(バイナリも�
 
 ## PLY
 
-- [source](./load_file_ply.html)
+[source](./load_file_ply.html)
+
 - https://github.com/mrdoob/three.js/blob/master/examples/js/loaders/PLYLoader.js
 
 - テキストとバイナリの両方に対応
@@ -1026,7 +1043,25 @@ function set_col() {
 
 
 
-## group
+# Mesh, PointCloud
+
+メッシュデータから点群を作成して一緒に表示させるデモ([html](module_file_load.html), [javascript](module_file_load.js))
+
+
+```javascript
+// mesh
+let mesh = new THREE.Mesh(geometry, material);
+
+// pcd
+let pcd = new THREE.Points(geometry, material);
+pcd.geometry.vertices
+pcd.geometry.vertices.length
+pcd.isPoints == true
+```
+
+
+
+# Group
 
 ```javascript
 var cubeA = new THREE.Mesh(geometry, material);
@@ -1048,6 +1083,33 @@ group.add(cubeB);
 
 
 # HTML, JavaScript Tips
+
+## 基本構文
+
+```javascript
+for(let i=0; i<10; i++){
+    console.log(i);
+}
+
+arr = ["A","B","C"];
+arr.foreach(function(name,index){
+    console.log(name+":"+index);
+});
+arr.foreach(function(name){
+    console.log(name);
+});
+
+dict = {"A":10,"B":20,"C":30};
+for(const key in dict){
+    console.log(key+":"+dict[key]);
+}
+
+for(const item of arr){
+    console.log(item);
+}
+```
+
+
 
 ## 文字列のフォーマット指定して出力
 
@@ -1192,7 +1254,8 @@ console.log(result_concat);
   }
   ```
 
-- HTMLに直書きする場合は上の条件を満たしていても親ディレクトリのモジュールは読めない
+
+
 
 
 

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>three.js webgl - box selection</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link type="text/css" rel="stylesheet" href="main.css">
+	<style>
+		body {
+			background-color: #f0f0f0;
+			color: #000;
+		}
+
+		a {
+			color: #08e;
+		}
+
+		.selectBox {
+			border: 1px solid #55aaff;
+			background-color: rgba(75, 160, 255, 0.3);
+			position: fixed;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="info">
+		<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - box selection
+	</div>
+
+	<script type="module">
+		import * as THREE from '../../../three.js/build/three.module.js';
+		import Stats from '../../../three.js/examples/jsm/libs/stats.module.js';
+
+		// import { SelectionBox } from '../../../three.js/examples/jsm/interactive/SelectionBox.js';
+		import { SelectionBox } from './mySelectionBox.js';
+		import { SelectionHelper } from '../../../three.js/examples/jsm/interactive/SelectionHelper.js';
+
+		var container, stats;
+		var camera, scene, renderer;
+
+		// let witdh = window.innerWidth;
+		// let height = window.innerHeight;
+		let width = 900;
+		let height = 600;
+
+		const selected_vert_col = 0xff0000;
+		const non_selected_vert_col = 0x00ffff;
+
+		const sprite = new THREE.TextureLoader().load('../../../three.js/examples/textures/sprites/disc.png');
+
+		let pcd;
+
+		init();
+		animate();
+
+		function create_pcd_from_mesh(geo) {
+			const geometry = new THREE.Geometry();
+			geometry.vertices = geo.vertices;
+
+			geometry.colors = [];
+			// geometry.colors = Array(geo.vertices.length).fill(new THREE.Color(0x00ffff)); // この方法だと全部同じColorオブジェクト参照になってしまう
+			geometry.colors = [...Array(geo.vertices.length)].map((_, i) => new THREE.Color(0x00ffff));
+
+			var material = new THREE.PointsMaterial({
+				size: 15,
+				// color: 0xff0000,
+				vertexColors: true,
+				sizeAttenuation: false, // trueにするとsizeはpixel単位になるので1以上にすること
+				map: sprite,
+				alphaTest: 0.5,
+				transparent: true,
+			});
+
+			const pcd = new THREE.Points(geometry, material);
+
+			// selected_vertex = Array(geo.vertices.length).fill(false);
+
+			return pcd;
+		}
+
+		function init() {
+			container = document.createElement('div');
+			document.body.appendChild(container);
+
+			camera = new THREE.PerspectiveCamera(70, width / height, 1, 5000);
+			camera.position.z = 2;
+
+			scene = new THREE.Scene();
+			scene.background = new THREE.Color(0xf0f0f0);
+
+			scene.add(new THREE.AmbientLight(0x505050));
+
+			var light = new THREE.SpotLight(0xffffff, 1.5);
+			light.position.set(0, 500, 2000);
+			light.angle = Math.PI / 9;
+
+			light.castShadow = true;
+			light.shadow.camera.near = 1000;
+			light.shadow.camera.far = 4000;
+			light.shadow.mapSize.width = 1024;
+			light.shadow.mapSize.height = 1024;
+
+			scene.add(light);
+
+			// create point cloud
+			const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+			const material = new THREE.MeshNormalMaterial();
+
+			const mesh = new THREE.Mesh(geometry, material);
+			// mesh.name = mesh_name;
+			scene.add(mesh);
+
+			pcd = create_pcd_from_mesh(geometry);
+			// pcd.name = pcd_name;
+			scene.add(pcd);
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(width, height);
+
+			renderer.shadowMap.enabled = true;
+			renderer.shadowMap.type = THREE.PCFShadowMap;
+
+			container.appendChild(renderer.domElement);
+
+			stats = new Stats();
+			container.appendChild(stats.dom);
+
+			window.addEventListener('resize', onWindowResize, false);
+		}
+
+		function onWindowResize() {
+			camera.aspect = width / height;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(width, height);
+		}
+
+		//
+		function animate() {
+			requestAnimationFrame(animate);
+
+			render();
+			stats.update();
+		}
+
+		function render() {
+			renderer.render(scene, camera);
+		}
+
+		var selectionBox = new SelectionBox(camera, scene);
+		var helper = new SelectionHelper(selectionBox, renderer, 'selectBox');
+
+		document.addEventListener('mousedown', function (event) {
+			// for (var item of selectionBox.collection) {
+			// 	item.material.emissive.set(0x000000); //放射光を設定 何も発光しない
+			// }
+			for (let vi of selectionBox.collection) {
+				pcd.geometry.colors[vi].setHex(non_selected_vert_col);
+			}
+			pcd.geometry.colorsNeedUpdate = true;
+
+			selectionBox.startPoint.set(
+				(event.clientX / width) * 2 - 1,
+				- (event.clientY / height) * 2 + 1,
+				0.5);
+		});
+
+		document.addEventListener('mousemove', function (event) {
+			if (helper.isDown) {
+				// 一度選択済みのオブジェクトの選択状態をリセット
+				// for (var i = 0; i < selectionBox.collection.length; i++) {
+				// 	selectionBox.collection[i].material.emissive.set(0x000000);
+				// }
+				for (let vi of selectionBox.collection) {
+					pcd.geometry.colors[vi].setHex(non_selected_vert_col);
+				}
+
+				// 終点座標の更新
+				selectionBox.endPoint.set(
+					(event.clientX / width) * 2 - 1,
+					- (event.clientY / height) * 2 + 1,
+					0.5);
+
+				// 選択処理
+				var allSelected = selectionBox.select();
+
+				// 選択されたオブジェクトを選択状態に
+				// for (var i = 0; i < allSelected.length; i++) {
+				// 	allSelected[i].material.emissive.set(0xffffff); // 真っ白に発光する
+				// }
+				for (let vi of selectionBox.collection) {
+					pcd.geometry.colors[vi].setHex(selected_vert_col);
+				}
+				pcd.geometry.colorsNeedUpdate = true;
+			}
+		});
+
+		document.addEventListener('mouseup', function (event) {
+			selectionBox.endPoint.set(
+				(event.clientX / width) * 2 - 1,
+				- (event.clientY / height) * 2 + 1,
+				0.5);
+
+			var allSelected = selectionBox.select();
+
+			// for (var i = 0; i < allSelected.length; i++) {
+			// 	allSelected[i].material.emissive.set(0xffffff);
+			// }
+			for (let vi of selectionBox.collection) {
+				pcd.geometry.colors[vi].setHex(selected_vert_col);
+			}
+			pcd.geometry.colorsNeedUpdate = true;
+		});
+	</script>
+</body>
+
+</html>
