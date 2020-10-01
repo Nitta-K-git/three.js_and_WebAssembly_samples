@@ -9,6 +9,7 @@ pybindと同じように公開するクラスを作成して、メンバ・メ�
 - 関数のオーバーロードはJavaScriptに実装されていないので、公開する関数名は分けないといけない
 - コンストラクタが無いと`BindingError {name: "BindingError", message: "Sample has no accessible constructor", stack: "BindingError: Sample has no accessible constructor…"}`のようなエラーが出る
 - 名前が重複すると新しい方で上書きされてしまう
+- 生が引数に入っているものはポインタは扱えない(エラーでコンパイルできない)
 
 main.cpp
 
