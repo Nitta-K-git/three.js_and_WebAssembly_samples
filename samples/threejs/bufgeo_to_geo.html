@@ -50,16 +50,19 @@
             // convert from indexed BufferGeometry
             var geo = new THREE.Geometry();
             geo.fromBufferGeometry(bufgeo);
+            console.log("PLY形式のBufferGeometryからGeometryへ変換 : PLY形式維持される");
             console.log("geo", geo.vertices, geo.faces);
 
             // convert2 from non indexed BufferGeometry
             var geo2 = new THREE.Geometry();
             geo2.fromBufferGeometry(bufgeonon);
+            console.log("STL形式のBufferGeometryからGeometryへ変換 : STL形式維持される");
             console.log("geo non index", geo2.vertices, geo2.faces);
 
             // convert3 from indexed Geometry
             var bgeo = new THREE.BufferGeometry();
             bgeo.fromGeometry(geo);
+            console.log("PLY形式のGeometryからBufferGeometryへ変換 : STL形式に変換される");
             console.log("bufgeo from indexed", bgeo.attributes.position, bgeo.getIndex());
 
             const mesh = new THREE.Mesh(

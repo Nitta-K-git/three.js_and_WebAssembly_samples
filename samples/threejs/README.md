@@ -759,6 +759,27 @@ function save(blob, filename) {
 
 
 
+# Camera
+
+## 平行光源を視点に追従させる
+
+デフォルトではOrbitControlで視点を移動しても光源とオブジェクトの位置関係は固定されているため、陰影に変化がない。
+
+- [javascript - three.js directional light following camera - Stack Overflow](https://stackoverflow.com/questions/24790829/three-js-directional-light-following-camera)
+
+```javascript
+// 平行光源
+const directionalLight = new THREE.DirectionalLight(0xffffff);
+directionalLight.position.set(1, 1, 1);
+scene.add(directionalLight);
+
+function tick() {
+    requestAnimationFrame(tick);
+    directionalLight.position.copy( camera.position ); // カメラと光源の位置を一致させる
+    renderer.render(scene, camera);
+}
+```
+
 
 
 # Geometry
@@ -783,7 +804,7 @@ function save(blob, filename) {
 - [[Three.js] BufferGeometry vs Geometry - Qiita](https://qiita.com/masato_makino/items/2ad5b1eb01a118d0a155)
   - 二つの形式でパフォーマンスに差が出るのは頂点データの書き換えと生成時のみ。描画時は数万ポリゴンのオーダーなら差はない
 
-- Geometry → BufferGeometry への変換では面の情報はなくなる(強制的にSTL形式になる)
+- Geometry → BufferGeometry への変換では**面の情報はなくなる**(強制的にSTL形式になる)
 - BufferGeometry → Geometry の変換では面のindexは必ず付加される(元がSTL形式の場合はそのまま連番でつけられる、PLY形式の場合はそのまま)
 
 ```javascript
@@ -1084,7 +1105,7 @@ group.add(cubeB);
 
 # HTML, JavaScript Tips
 
-## 基本構文
+## 基本構文 for,
 
 ```javascript
 for(let i=0; i<10; i++){
@@ -1107,6 +1128,18 @@ for(const key in dict){
 for(const item of arr){
     console.log(item);
 }
+```
+
+
+
+## 可変長引数にリストを展開して渡す
+
+- [JavaScriptで可変長引数を扱うモダンな書き方 - 銀の弾丸](https://takamints.hatenablog.jp/entry/varg-on-es6-modern-javascript)
+- [ES6で可変長の引数に配列を渡す - Qiita](https://qiita.com/keng0o/items/8be36613307d220ed19c)
+
+```javascript
+var aiu = ["あ","い","う"];
+test(...aiu); // リストが展開されて可変長引数として入る
 ```
 
 
