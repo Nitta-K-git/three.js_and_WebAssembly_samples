@@ -122,6 +122,13 @@
         }
 
         function init() {
+            // オーバーロードテスト
+            sample = new Module.Sample();
+            console.log(sample.add_int(1,2));
+            console.log(sample.add_double(1.0,2.5));
+            console.log(sample.add_int3(1,2,3));
+            console.log(sample.add_str("hoge", "foo"));
+            
             exMesh = new Module.ExMesh();
 
             const width = 960;

@@ -112,6 +112,17 @@ public:
 	}
 };
 
+class Sample{
+public:
+	Sample(){
+		cout << "init Sample" << endl;
+	}
+	int add(int a, int b){return a+b;}
+	int add(int a, int b, int c){return a+b+c;}
+	double add(double a, double b){return a+b;}
+	string add(string a, string b){return a+b;}
+};
+
 int main(){
     std::cout << "Hello MeshLab" << std::endl;
 }
@@ -131,5 +142,16 @@ EMSCRIPTEN_BINDINGS(my_class_example) {
 			.function("create_pcd", &ExMesh::create_pcd)
 			.function("create_mesh", &ExMesh::create_mesh)
 			.function("get_mesh_array", &ExMesh::get_mesh_array)
+			;
+}
+
+
+EMSCRIPTEN_BINDINGS(my_class_example2) {
+	class_<Sample>("Sample")
+			.constructor()
+			.function("add_int", static_cast<int (Sample::*)(int,int)>(&Sample::add))
+			.function("add_int3", static_cast<int (Sample::*)(int,int,int)>(&Sample::add))
+			.function("add_double", static_cast<double (Sample::*)(double,double)>(&Sample::add))
+			.function("add_str", static_cast<string (Sample::*)(string,string)>(&Sample::add))
 			;
 }

@@ -4,6 +4,12 @@ https://emscripten.org/docs/porting/connecting_cpp_and_javascript/embind.html#cl
 
 pybindと同じように公開するクラスを作成して、メンバ・メソッドも登録できる(登録数が増えるとファイルサイズも大きくなるので、なるべく最小限にする)
 
+注意点
+
+- 関数のオーバーロードはJavaScriptに実装されていないので、公開する関数名は分けないといけない
+- コンストラクタが無いと`BindingError {name: "BindingError", message: "Sample has no accessible constructor", stack: "BindingError: Sample has no accessible constructor…"}`のようなエラーが出る
+- 名前が重複すると新しい方で上書きされてしまう
+
 main.cpp
 
 ```cpp
@@ -311,5 +317,42 @@ index.html
 </body>
 
 </html>
+```
+
+
+
+## クラスの関数がオーバーロードで宣言されている場合
+
+- [今更聞けないシグナル・スロット総整理 - Qiita](https://qiita.com/argama147/items/30da69e4c1088917d522#%E8%A7%A3%E6%B1%BA%E7%AD%96%EF%BC%91static_cast%E3%81%99%E3%82%8B)
+
+```cpp
+class Sample{
+public:
+	Sample(){
+		cout << "init Sample" << endl;
+	}
+	int add(int a, int b){return a+b;}
+	int add(int a, int b, int c){return a+b+c;}
+	double add(double a, double b){return a+b;}
+	string add(string a, string b){return a+b;}
+};
+
+EMSCRIPTEN_BINDINGS(my_class_example2) {
+	class_<Sample>("Sample")
+			.constructor()
+			.function("add_int", static_cast<int (Sample::*)(int,int)>(&Sample::add))
+			.function("add_int3", static_cast<int (Sample::*)(int,int,int)>(&Sample::add))
+			.function("add_double", static_cast<double (Sample::*)(double,double)>(&Sample::add))
+			.function("add_str", static_cast<string (Sample::*)(string,string)>(&Sample::add))
+			;
+}
+```
+
+```html
+sample = new Module.Sample();
+console.log(sample.add_int(1,2));
+console.log(sample.add_double(1.0,2.5));
+console.log(sample.add_int3(1,2,3));
+console.log(sample.add_str("hoge", "foo"));
 ```
 
