@@ -1,0 +1,192 @@
+<html>
+
+<head>
+    <meta http-equiv="content-type" charset="utf-8">
+</head>
+
+<body>
+    <script src="cmake_meshlab_class.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
+    <script src="../../../../three.js/examples/js/loaders/OBJLoader.js"></script>
+    <script src="../../../../three.js/examples/js/loaders/PLYLoader.js"></script>
+    <script src="../../../../three.js/examples/js/controls/OrbitControls.js"></script>
+
+    <h2>3Dファイルの読み込み・表示・編集</h2>
+    <form>
+        <input type="file" id="inputfile" accept=".ply" />
+    </form>
+    <canvas id="myCanvas"></canvas>
+    <!-- 読み込んだデータをwasmに送るボタン -->
+    <input type="button" value="wasmへデータ転送" onclick="send_to_wasm()">
+    <!-- wasm側で処理を行うトリガー -->
+    <input type="button" value="wasmでデータ処理" onclick="trigger_process_wasm()">
+    <!-- wasmのデータをjavascript側に反映 -->
+    <input type="button" value="wasmのデータ読込" onclick="load_wasm_data()">
+
+    <input type="button" value="sceneオブジェクト削除" onclick="delete_scene_data()">
+
+    <script type="text/javascript">
+        var inputfile = document.getElementById('inputfile')
+        var scene;
+        var geometry;
+        var mesh;
+        var material;
+        let exMesh;
+
+        // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
+        window.addEventListener('load', init);
+
+        function delete_scene_data() {
+            let l = [];
+            for (let i = 0; i < scene.children.length; ++i) {
+                d = scene.children[i];
+                if (d.type == "Mesh") {
+                    l.push(d);
+                }
+            }
+            // まとめてremoveしないと残る
+            scene.remove(...l); // 可変長引数でとるので、リストを展開して入れる
+        }
+
+        function send_to_wasm() {
+            dic = {};
+            v = geometry.attributes.position.array;
+            f = geometry.getIndex();
+            if (f != null) {
+                f = f.array;
+            }
+            // Module.threejs_to_meshlab_mesh(v, f);
+            exMesh.create_mesh(v, f);
+        }
+        function trigger_process_wasm() {
+            exMesh.calc_min_curvature();
+        }
+        function load_wasm_data() {
+            let geometry = new THREE.BufferGeometry();
+
+            // v = Module.meshlab_to_threejs();
+            v = exMesh.get_mesh_array();
+            vf = new Float32Array(v["position"]);
+            indices = v["findex"]; // Int32Arrayだと動かない
+            if (v.color) {
+                colors = new Float32Array(v["color"]);
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                geometry.attributes.color.needsUpdate = true;
+                console.log("colors", colors);
+            }
+            // console.log(v);
+            // 頂点データを入れ替えて更新
+            // 入れ替え
+            // for (let i = 0; i * 3 < v.length; i++) {
+            //     geometry.attributes.position.setX(i, i * 3 + 0);
+            //     geometry.attributes.position.setY(i, i * 3 + 1);
+            //     geometry.attributes.position.setZ(i, i * 3 + 2);
+            // }
+            // 更新
+            geometry.setAttribute('position', new THREE.BufferAttribute(vf, 3));
+            geometry.setIndex(indices);
+            // geometry.computeFaceNormals();
+            let mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+        }
+
+        inputfile.addEventListener("change", function (e) {
+            var file = e.target.files;
+
+            var reader = new FileReader();
+            var arraybuf;
+            if (file.length > 0) {
+                reader.readAsArrayBuffer(file[0]);
+
+                reader.onload = function () { // ファイルの読み込みが完了したら実行
+                    arraybuf = reader.result;
+                    console.log(arraybuf);
+
+                    geometry = load_obj(arraybuf);
+                    // geometry = geometry.toNonIndexed(); // STLのようなインデックス使わない形式に変換
+                    add_geometry(geometry);
+                }
+            }
+        }, false);
+
+        function load_obj(arraybuf) {
+            var loader = new THREE.PLYLoader();
+            return loader.parse(arraybuf);
+        }
+
+        function add_geometry(geometry) {
+            mesh = new THREE.Mesh(geometry, material);
+            mesh.name = "def";
+            scene.remove(scene.getObjectByName("def"));
+            scene.add(mesh);
+        }
+
+        function init() {
+            exMesh = new Module.ExMesh();
+
+            const width = 960;
+            const height = 540;
+
+            const renderer = new THREE.WebGLRenderer({
+                canvas: document.querySelector('#myCanvas') // 予め作っておいたcanvas要素を連携させる
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height); // canvas要素の大きさ自体が変わる
+            document.body.appendChild(renderer.domElement);
+
+            // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
+            scene = new THREE.Scene();
+
+            // 平行光源
+            const directionalLight = new THREE.DirectionalLight(0xffffff);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+
+            // ポイント光源
+            // const pointLight = new THREE.PointLight(0xffffff, 2, 1000);
+            // scene.add(pointLight);
+            // const pointLightHelper = new THREE.PointLightHelper(pointLight, 30);
+            // scene.add(pointLightHelper);
+
+            // 環境光源
+            const light = new THREE.AmbientLight(0xFFFFFF, 0.3);
+            scene.add(light);
+
+            // camera
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            camera.position.set(0, 0, +5);
+
+            // カメラコントローラーを作成
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+            // geometry
+            geometry = new THREE.BufferGeometry();
+            geometry.fromGeometry(new THREE.BoxGeometry(1, 1, 1.5));
+            geometry.computeFaceNormals();
+            geometry.computeVertexNormals();
+
+            // geometry = geometry.toNonIndexed();
+            // material = new THREE.MeshBasicMaterial({ color: 0x6699FF });
+            material = new THREE.MeshPhongMaterial({
+                // color: 0x6699FF,
+                flatShading: true,
+                // wireframe:true,
+                vertexColors: true,
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.name = "def";
+            scene.add(mesh);
+
+            tick();
+
+            function tick() {
+                requestAnimationFrame(tick);
+                directionalLight.position.copy( camera.position );
+                renderer.render(scene, camera);
+            }
+        }
+
+    </script>
+</body>
+
+</html>
