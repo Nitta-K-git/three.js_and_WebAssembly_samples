@@ -5,11 +5,11 @@
 </head>
 
 <body>
-    <!-- <script src="cmake_meshlab_edit_data.js"></script> -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script> -->
-    <!-- <script src="js/loaders/OBJLoader.js"></script> -->
-    <!-- <script src="../../js/loaders/PLYLoader.js"></script> -->
-    <!-- <script src="../js/controls/OrbitControls.js"></script> -->
+    <script src="cmake_meshlab_edit_data.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
+    <script src="../../../../three.js/examples/js/loaders/OBJLoader.js"></script>
+    <script src="../../../../three.js/examples/js/loaders/PLYLoader.js"></script>
+    <script src="../../../../three.js/examples/js/controls/OrbitControls.js"></script>
 
     <h2>3Dファイルの読み込み・表示・編集</h2>
     <form>
@@ -17,72 +17,59 @@
     </form>
     <canvas id="myCanvas"></canvas>
     <!-- 読み込んだデータをwasmに送るボタン -->
-    <input type="button" value="wasmへデータ転送" id="send_to_wasm">
+    <input type="button" value="wasmへデータ転送" onclick="send_to_wasm()">
     <!-- wasm側で処理を行うトリガー -->
     <input type="button" value="wasmでデータ処理" onclick="trigger_process_wasm()">
     <!-- wasmのデータをjavascript側に反映 -->
     <input type="button" value="wasmのデータ読込" onclick="load_wasm_data()">
 
-    <!-- <script type="text/javascript"> -->
-    <script type="module">
-        import * as THREE from '../../../../three.js/build/three.module.js';
-        import { OrbitControls } from '../../../../three.js/examples/jsm/controls/OrbitControls.js';
-        import { PLYLoader } from '../../../../three.js/examples/jsm/loaders/PLYLoader.js';
-        // wasmをモジュールとしてimportする機能はまだない？ https://developer.mozilla.org/ja/docs/WebAssembly/Loading_and_running
-        // import { Meshlab } from "./cmake_meshlab_edit_data.js";
+    <input type="button" value="sceneオブジェクト削除" onclick="delete_scene_data()">
 
+    <script type="text/javascript">
         var inputfile = document.getElementById('inputfile')
         var scene;
         var geometry;
         var mesh;
         var material;
 
-        // WebAssembly.compileStreaming(fetch('cmake_meshlab_edit_data.wasm'))
-        //     .then(function (mod) {
-        //         var imports = WebAssembly.Module.imports(mod);
-        //         console.log(imports);
-        //     });
-
-        // let importObject = { imports: { imported_func: arg => console.log(arg) } };
-        // WebAssembly.instantiateStreaming(fetch('cmake_meshlab_edit_data.wasm'), importObject)
-        //     .then(results => {
-        //         // Do something with the results!
-        //         console.log("hogehoge");
-        //     });
-
-        var importObject = { imports: { imported_func: arg => console.log(arg) } };
-        WebAssembly.instantiateStreaming(fetch('cmake_meshlab_edit_data.wasm'), importObject)
-            .then(
-                obj => obj.instance.exports.hello()
-                // obj => console.log(obj.instance)
-            );
-
         // ページの読み込みを待つ(loadイベントが完了した時点で呼び出す関数を指定)
         window.addEventListener('load', init);
 
-        // moduleだとinputタグでonclickで呼べない。addEventListenerを使う
-        // document.getElementById('#send_to_wasm').addEventListener('click', send_to_wasm);
-        // document.querySelector('#send_to_wasm').addEventListener('click', functest);
-        document.querySelector('#send_to_wasm').addEventListener('click', send_to_wasm);
-
-        function functest() {
-            console.log("hoge");
+        function delete_scene_data() {
+            let l = [];
+            for (let i = 0; i < scene.children.length; ++i) {
+                d = scene.children[i];
+                if (d.type == "Mesh") {
+                    l.push(d);
+                }
+            }
+            // まとめてremoveしないと残る
+            scene.remove(...l); // 可変長引数でとるので、リストを展開して入れる
         }
+
         function send_to_wasm() {
-            Module.js_to_asm(geometry.attributes.position.array);
+            dic = {};
+            v = geometry.attributes.position.array;
+            f = geometry.getIndex();
+            if (f != null) {
+                f = f.array;
+            }
+            Module.threejs_to_meshlab_mesh(v, f);
         }
         function trigger_process_wasm() {
-            Module.process_data();
+            Module.calc_curvature();
         }
         function load_wasm_data() {
             let geometry = new THREE.BufferGeometry();
 
-            v = Module.asm_to_js();
+            v = Module.meshlab_to_threejs();
             vf = new Float32Array(v["position"]);
             indices = v["findex"]; // Int32Arrayだと動かない
             if (v.color) {
                 colors = new Float32Array(v["color"]);
                 geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                geometry.attributes.color.needsUpdate = true;
+                console.log("colors", colors);
             }
             // console.log(v);
             // 頂点データを入れ替えて更新
@@ -105,28 +92,26 @@
 
             var reader = new FileReader();
             var arraybuf;
-            reader.readAsArrayBuffer(file[0]);
+            if (file.length > 0) {
+                reader.readAsArrayBuffer(file[0]);
 
-            reader.onload = function () { // ファイルの読み込みが完了したら実行
-                arraybuf = reader.result;
-                console.log(arraybuf);
+                reader.onload = function () { // ファイルの読み込みが完了したら実行
+                    arraybuf = reader.result;
+                    console.log(arraybuf);
 
-                geometry = load_obj(arraybuf);
-                // geometry = geometry.toNonIndexed(); // STLのようなインデックス使わない形式に変換
-                add_geometry(geometry);
+                    geometry = load_obj(arraybuf);
+                    // geometry = geometry.toNonIndexed(); // STLのようなインデックス使わない形式に変換
+                    add_geometry(geometry);
+                }
             }
         }, false);
 
         function load_obj(arraybuf) {
-            var loader = new PLYLoader();
+            var loader = new THREE.PLYLoader();
             return loader.parse(arraybuf);
         }
 
         function add_geometry(geometry) {
-            // material = new THREE.MeshBasicMaterial({
-            //     color: 0x66FF00
-            // });
-
             mesh = new THREE.Mesh(geometry, material);
             mesh.name = "def";
             scene.remove(scene.getObjectByName("def"));
@@ -147,8 +132,19 @@
             // シーンを作成 : 3D空間のこと，3Dオブジェクトや光源を置く場所
             scene = new THREE.Scene();
 
-            //light
-            var light = new THREE.HemisphereLight();
+            // 平行光源
+            const directionalLight = new THREE.DirectionalLight(0xffffff);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+
+            // ポイント光源
+            // const pointLight = new THREE.PointLight(0xffffff, 2, 1000);
+            // scene.add(pointLight);
+            // const pointLightHelper = new THREE.PointLightHelper(pointLight, 30);
+            // scene.add(pointLightHelper);
+
+            // 環境光源
+            const light = new THREE.AmbientLight(0xFFFFFF, 0.3);
             scene.add(light);
 
             // camera
@@ -156,14 +152,21 @@
             camera.position.set(0, 0, +5);
 
             // カメラコントローラーを作成
-            const controls = new OrbitControls(camera, renderer.domElement);
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
 
             // geometry
             geometry = new THREE.BufferGeometry();
             geometry.fromGeometry(new THREE.BoxGeometry(1, 1, 1.5));
+            geometry.computeFaceNormals();
+            geometry.computeVertexNormals();
+
             // geometry = geometry.toNonIndexed();
-            material = new THREE.MeshBasicMaterial({
-                color: 0x6699FF
+            // material = new THREE.MeshBasicMaterial({ color: 0x6699FF });
+            material = new THREE.MeshPhongMaterial({
+                // color: 0x6699FF,
+                flatShading: true,
+                // wireframe:true,
+                vertexColors: true,
             });
             const mesh = new THREE.Mesh(geometry, material);
             mesh.name = "def";
@@ -173,6 +176,7 @@
 
             function tick() {
                 requestAnimationFrame(tick);
+                directionalLight.position.copy( camera.position );
                 renderer.render(scene, camera);
             }
         }

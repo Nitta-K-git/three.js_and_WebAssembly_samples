@@ -22,6 +22,7 @@ CMeshO mesh;
 bool calc_min_curvature(CMeshO &mesh){
 	mesh.vert.EnableVFAdjacency();
 	mesh.face.EnableFFAdjacency();
+	mesh.face.EnableVFAdjacency();
 	mesh.vert.EnableCurvature();
 	mesh.vert.EnableCurvatureDir();
 	
@@ -52,6 +53,7 @@ bool calc_min_curvature(CMeshO &mesh){
 
 int main()
 {
+	tri::Dodecahedron(mesh);
     std::cout << "Hello MeshLab" << std::endl;
 }
 
@@ -59,17 +61,44 @@ void hello(){
 	std::cout << "Hello!!" << std::endl;
 }
 
-void js_to_asm(val v){
+void threejs_to_meshlab_pcd(val vert){
 	vector<MESHLAB_SCALAR> vd;
-	vd = vecFromJSArray<MESHLAB_SCALAR>(v);
-	cout << "vecFromJSArray" << endl;
-	vector<Point3m> coordVec;
-	vector<Point3i> indexVec;
+	vd = vecFromJSArray<MESHLAB_SCALAR>(vert);
 	
+	vector<Point3m> coordVec;
 	for(unsigned int i=0; i*3<vd.size(); ++i){
 		coordVec.push_back(Point3m(vd[i*3+0], vd[i*3+1], vd[i*3+2]));
 	}
 	tri::BuildMeshFromCoordVector(mesh,coordVec);
+	printf("vn : %d, fn : %d\n", mesh.VN(), mesh.FN());
+}
+
+void threejs_to_meshlab_mesh(val vert, val face){
+	vector<MESHLAB_SCALAR> vd;
+	vector<int> vf;
+
+	vector<Point3m> coordVec;
+	vector<Point3i> indexVec;
+	
+	vd = vecFromJSArray<MESHLAB_SCALAR>(vert);
+	for(unsigned int i=0; i*3<vd.size(); ++i){
+		coordVec.push_back(Point3m(vd[i*3+0], vd[i*3+1], vd[i*3+2]));
+	}
+
+	if(face.isNull() || face["length"].isNull()){
+		// 他の面と頂点を共有しない
+		for(int i=0; i*3<coordVec.size(); ++i){
+			indexVec.push_back(Point3i(i*3+0, i*3+1, i*3+2));
+		}
+	}else{
+		vf = vecFromJSArray<int>(face);
+		for(unsigned int i=0; i*3<vf.size(); ++i){
+			indexVec.push_back(Point3i(vf[i*3+0], vf[i*3+1], vf[i*3+2]));
+		}
+	}
+	
+	tri::BuildMeshFromCoordVectorIndexVector(mesh, coordVec, indexVec);
+	printf("vn : %d, fn : %d\n", mesh.VN(), mesh.FN());
 }
 
 // meshlabの関数を呼び出す 
@@ -78,8 +107,7 @@ void calc_curvature(){
 	calc_min_curvature(mesh);
 }
 
-val asm_to_js(){
-//	tri::Dodecahedron(mesh);
+val meshlab_to_threejs(){
 	val vo = val::object();
 	vo.set("position", val::array());
 	vo.set("findex", val::array());
@@ -90,9 +118,9 @@ val asm_to_js(){
 		vo["position"].call<val>("push", p.Y());
 		vo["position"].call<val>("push", p.Z());
 		
-		vo["color"].call<val>("push", vi->cC()[0]);
-		vo["color"].call<val>("push", vi->cC()[1]);
-		vo["color"].call<val>("push", vi->cC()[2]);
+		vo["color"].call<val>("push", vi->cC()[0]/255.0);
+		vo["color"].call<val>("push", vi->cC()[1]/255.0);
+		vo["color"].call<val>("push", vi->cC()[2]/255.0);
 	}
 	for(CMeshO::FaceIterator fi=mesh.face.begin(); fi!=mesh.face.end(); ++fi){
 		for(int i=0;i<fi->VN();++i)
@@ -102,8 +130,9 @@ val asm_to_js(){
 }
 
 EMSCRIPTEN_BINDINGS(module) {
-	emscripten::function("to_asm", &js_to_asm);
+	emscripten::function("threejs_to_meshlab_mesh", &threejs_to_meshlab_mesh);
+	emscripten::function("threejs_to_meshlab_pcd", &threejs_to_meshlab_pcd);
 	emscripten::function("calc_curvature", &calc_curvature);
-	emscripten::function("from_asm", &asm_to_js);
+	emscripten::function("meshlab_to_threejs", &meshlab_to_threejs);
 	emscripten::function("hello", &hello);
 }
