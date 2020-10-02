@@ -89,6 +89,8 @@ nginxからgithub上のhtmlファイルを直接参照できるように設定�
 
 # WebAssembly sample codes
 
+note : cout, printf文は改行コードを入れないとconsoleに出力されない
+
 ## Basic samples
 
 - template with cmake : [CODE](./samples/webasm/cmake_template)

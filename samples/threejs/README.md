@@ -1256,6 +1256,38 @@ let result_concat = array_base.concat(array_add);
 console.log(result_concat);
 ```
 
+
+
+## HTML部品
+
+### slider
+
+[HTML5 スライダーで数値を入力するサンプル(range) | ITSakura](https://itsakura.com/html5-range)
+
+```html
+<input type="range" id="slider" value="0.5" min="-10.5" max="10" step="0.1" oninput="change_slider()">
+<output id="output1">1</output>
+<input type="button" value="test" onclick="test()">
+
+<script type="text/javascript">
+    function change_slider(){ // スライダーが動いたとき
+        const slider = document.getElementById('slider');
+        document.getElementById('output1').value=slider.value;
+    }
+    function test(){
+        // スライダーの最小値を変更するテスト
+        const slider = document.getElementById('slider');
+        slider.min = -0.5;
+    }
+</script>
+```
+
+### dialog box
+
+[HTMLでダイアログを表現する - dialog要素の基本 | CodeGrid](https://app.codegrid.net/entry/dialog-1)
+
+
+
 # モジュール化
 
 - [JavaScript モジュール - JavaScript | MDN](https://developer.mozilla.org/ja/docs/Web/JavaScript/Guide/Modules) : 使い方はこれだけ読んどけばOK
