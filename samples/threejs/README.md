@@ -10,6 +10,8 @@
 
 # template
 
+## ひな形
+
 [source](template.html)
 
 ```html
@@ -72,6 +74,97 @@
 
 </html>
 ```
+
+## 複数のオブジェクトをランダムで作って配置する
+
+```javascript
+const geometry = new THREE.BoxBufferGeometry(50, 50, 50);
+
+// マウスとの交差を調べたいものは配列に格納する
+const meshList = [];
+for (let i = 0; i < 200; i++) {
+    const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.x = (Math.random() - 0.5) * 800;
+    mesh.position.y = (Math.random() - 0.5) * 800;
+    mesh.position.z = (Math.random() - 0.5) * 800;
+    mesh.rotation.x = Math.random() * 2 * Math.PI;
+    mesh.rotation.y = Math.random() * 2 * Math.PI;
+    mesh.rotation.z = Math.random() * 2 * Math.PI;
+    scene.add(mesh);
+
+    // 配列に保存
+    meshList.push(mesh);
+}
+
+```
+
+## Raycast 複数オブジェクト
+
+```javascript
+function tick() {
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(meshList);
+
+    meshList.map(mesh => {
+        // 交差しているオブジェクトが1つ以上存在し、
+        // 交差しているオブジェクトの1番目(最前面)のものだったら
+        if (intersects.length > 0 && mesh === intersects[0].object) {
+            let m = intersects[0];
+            mesh.material.color.setHex(0xff0000); // 色を赤くする
+            let elem = document.getElementById("hit_obj_id");
+            elem.innerHTML = "オブジェクトID : " + String(m.object.id);
+            document.getElementById("hit_face_index").innerHTML = "face index : " + String(m.faceIndex);
+            document.getElementById("hit_pos").innerHTML = 
+                formatByArr("pos ({0},{1},{2})", m.point.x.toFixed(2), m.point.y.toFixed(2), m.point.z.toFixed(2));
+        } else {
+            mesh.material.color.setHex(0xffffff); // それ以外は元の色にする
+        }
+    });
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+}
+
+```
+
+
+
+
+
+## Raycast : クリックして選択
+
+```javascript
+function init() {
+    // ~~~
+
+    // マウス座標管理用のベクトルを作成
+    const mouse = new THREE.Vector2();
+    // レイキャストを作成
+    const raycaster = new THREE.Raycaster();
+
+    canvas.addEventListener('mousedown', handleMouseDown, false);
+    function handleMouseDown(event) {
+        if (event.button == 0) { // click left button
+            const element = event.currentTarget;
+            mouse.x = ((event.clientX - element.offsetLeft) / element.offsetWidth) * 2 - 1;
+            mouse.y = -((event.clientY - element.offsetTop) / element.offsetHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObject(mesh);
+            if (intersects.length > 0) {
+                var intersect = intersects[0]; // 最前面の公差したオブジェクト取り出し
+                var face = intersect.face;
+                var fi = intersect.faceIndex;
+            }
+        }
+    }
+}
+```
+
+
+
+
 
 # Orbit camera
 
@@ -203,7 +296,7 @@ function tick() {
 
 ## ヒットしたオブジェクトの詳細を表示
 
-[source](raycast.html)
+[source](raycast_objects.html)
 
 - [HTML要素の中身を変えるinnerHTML | JavaScript入門編 - ウェブプログラミングポータル](https://wp-p.info/tpl_rep.php?cat=js-biginner&fl=r13)
 - [文字を表示させてみよう | HTML5入門編 - ウェブプログラミングポータル](https://wp-p.info/tpl_rep.php?cat=html-biginner&fl=r10)
@@ -213,7 +306,7 @@ function tick() {
 
 <head>
   <meta charset="utf-8" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r119/three.min.js"></script>
   <script>
     // ページの読み込みを待つ
     window.addEventListener('load', init);
@@ -221,7 +314,6 @@ function tick() {
     function formatByArr(msg) { var args = []; for (var i = 1; i < arguments.length; i++) { args[i - 1] = arguments[i]; } return msg.replace(/\{(\d+)\}/g, function (m, k) { return args[k]; }); };
 
     function init() {
-      // サイズを指定
       const width = 960;
       const height = 540;
 
@@ -554,6 +646,48 @@ const intersects = raycaster.intersectObject(mesh);
 
 
 
+# 特定のオブジェクトに画角を合わせる
+
+[source](select_obj_and_zoom.html)
+
+- [Camera Zoom To Fit Object - Questions - three.js forum](https://discourse.threejs.org/t/camera-zoom-to-fit-object/936/24)
+
+```javascript
+// camera = new THREE.PerspectiveCamera(45, width / height);
+// constrols = new THREE.OrbitControls(camera, renderer.domElement);
+// selection = object list
+function fitCameraToSelection(camera, controls, selection, fitOffset = 1.2) {
+    const box = new THREE.Box3();
+
+    for (const object of selection) box.expandByObject(object); // selectionにオブジェクトのリストを入れる場合
+
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+
+    const maxSize = Math.max(size.x, size.y, size.z);
+    const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * camera.fov / 360));
+    const fitWidthDistance = fitHeightDistance / camera.aspect;
+    const distance = fitOffset * Math.max(fitHeightDistance, fitWidthDistance);
+
+    const direction = controls.target.clone()
+    .sub(camera.position)
+    .normalize()
+    .multiplyScalar(distance);
+
+    controls.maxDistance = distance * 10;
+    controls.target.copy(center);
+
+    camera.near = distance / 100;
+    camera.far = distance * 100;
+    camera.updateProjectionMatrix();
+
+    camera.position.copy(controls.target).sub(direction);
+    controls.update();
+}
+```
+
+
+
 # 範囲選択
 
 [source]
@@ -852,7 +986,7 @@ var face = new THREE.Face3(0, 1, 2, color=color);
 geometry.faces.push(face);
 geometry.faces.push(new THREE.Face3(1, 2, 3, color=new THREE.Color(0x0000ff)));
 
-//the face normals and vertex normals can be calculated automatically if not supplied above
+//the face normals and vertex normals can be calculated automatically if not supplied above 法線計算
 geometry.computeFaceNormals();
 geometry.computeVertexNormals();
 
@@ -955,6 +1089,8 @@ geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
 // itemSize = 3 because there are 3 values (components) per vertex
 // 値を更新する必要があるときはBufferAttributeオブジェクトのneedsUpdateフラグを立てる(https://threejs.org/docs/#api/en/core/BufferAttribute)
 geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+geometry.computeFaceNormals(); // 法線計算
+geometry.computeVertexNormals();
 
 var material = new THREE.MeshBasicMaterial({
     // color: 0xff0000, 
@@ -1214,6 +1350,43 @@ console.log(xx.toString(16));	// ffff
 <!-- 複数指定(.xlsxもしくは.docx) -->
 <input type="file" accept=".xlsx,.docx">
 ```
+
+## マウスボタンの識別
+
+- [マウスでクリックされたボタンを取得する - JavaScript プログラミング](https://www.ipentec.com/document/javascript-get-mouse-down-button)
+
+```javascript
+function handleMouseDown(event) {
+    event = event || window.event; // IE対応
+    target = document.getElementById("output");
+    if (event.button == 0) {
+        target.innerHTML = "左ボタンが押されました。";
+    }
+    else if (event.button == 1) {
+        target.innerHTML = "中ボタンが押されました。";
+    }
+    else if (event.button == 2) {
+        target.innerHTML = "右ボタンが押されました。";
+    }
+}
+
+function handleMouseDown(event) {
+    event = event || window.event; // IE対応
+    target = document.getElementById("output");
+    target.innerHTML = "";
+    if ((event.buttons & 1) == 1) {
+        target.innerHTML += "左ボタンが押されました。";
+    }
+    if ((event.buttons & 4) == 4) {
+        target.innerHTML += "中ボタンが押されました。";
+    }
+    if ((event.buttons & 2) == 2) {
+        target.innerHTML += "右ボタンが押されました。";
+    }
+}
+```
+
+
 
 ## ボタン
 
